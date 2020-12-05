@@ -2,15 +2,19 @@ CXX = g++
 CXXFLAGS = -std=c++14 -Wall -O3
 
 
-SOURCES = definitions.cpp \
-          ising.cpp \
-          mcrg.cpp \
-          main.cpp
+SOURCES = src/definitions.cpp \
+          src/ising.cpp \
+          src/mcrg.cpp \
+          src/test_ising.cpp \
+          src/test_mcrg.cpp \
+          src/main.cpp
           
-OBJECTS = definitions.o \
-          ising.o \
-          mcrg.o \
-          main.o
+OBJECTS = build/definitions.o \
+          build/ising.o \
+          build/mcrg.o \
+          build/test_ising.o \
+          build/test_mcrg.o \
+          build/main.o
           
           
 all: run
@@ -21,6 +25,7 @@ clean:
 
 run: ${OBJECTS}
 	${CXX} ${CXXFLAGS} ${OBJECTS} -o run
+	
 
 definitions.o: definitions.cpp
 	${CXX} ${CXXFLAGS} -c definitions.cpp -o definitions.o
@@ -30,6 +35,12 @@ ising.o: ising.cpp
 	
 mcrg.o: mcrg.cpp
 	${CXX} ${CXXFLAGS} -c mcrg.cpp -o mcrg.o
+	
+test_ising.o: test_ising.cpp
+	${CXX} ${CXXFLAGS} -c test_ising.cpp -o test_ising.o
+
+test_mcrg.o: test_mcrg.cpp
+	${CXX} ${CXXFLAGS} -c test_mcrg.cpp -o test_mcrg.o
 
 main.o: main.cpp
 	${CXX} ${CXXFLAGS} -c main.cpp -o main.o

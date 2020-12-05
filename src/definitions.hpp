@@ -34,3 +34,8 @@ inline auto rand_spin(){
 inline auto rand_unif(){
     return unif(rng);
 }
+
+extern void display_spin_up();
+extern void display_spin_down();
+extern void print_bold(std::string message);
+extern bool print(int i);
