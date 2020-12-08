@@ -107,7 +107,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
     FILE* fptr = NULL;
 
     int S0 = L0/b_;
-    int n_transformations = floor(log(S0)/log(b_))-1;
+    int n_transformations = floor(log(S0)/log(b_))-2;
     int n_samples_loc = split_samples(n_samples);
     int n_samples_eq = 1E4;
 

@@ -6,7 +6,7 @@ int main(){
     MPI_Init(NULL, NULL);
 
     int b = 2;               // scaling factor
-    int L0 = 32;
+    int L0 = 128;
     //int N0 = 64;             // initial lattice size
     
     int n_samples = 1E6;     // MC samples
