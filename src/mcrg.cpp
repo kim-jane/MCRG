@@ -107,7 +107,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
     FILE* fptr = NULL;
 
     int S0 = L0/b_;
-    int n_transformations = floor(log(S0)/log(b_));
+    int n_transformations = floor(log(S0)/log(b_))-1;
     int n_samples_loc = split_samples(n_samples);
     int n_samples_eq = 1E4;
 
@@ -185,7 +185,6 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
         mat2D dSS_dK = SS_SS0_avg-SS_avg*SS0_avg.transpose();
         vec2D dK = (dSL_dK-dSS_dK).inverse() * (SL_avg-SS_avg);
         Kc = K-dK;
-        Kc(1) = 0;
         
         if(rank_ == 0 && verbose_ > 0){
             
@@ -193,8 +192,8 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
             print_vec2D(Kc);
         }
         if(n < n_transformations-1){
-            pIsingL0 = pIsingL0->block_spin_transformation(b_);
-            pIsingS0 = pIsingS0->block_spin_transformation(b_);
+            //pIsingL0 = pIsingL0->block_spin_transformation(b_);
+            //pIsingS0 = pIsingS0->block_spin_transformation(b_);
             pIsingL = pIsingL->block_spin_transformation(b_);
             pIsingS = pIsingS->block_spin_transformation(b_);
         }
