@@ -1,15 +1,14 @@
 #include "mcrg.hpp"
 
-MonteCarloRenormalizationGroup::MonteCarloRenormalizationGroup(int b,
-                                                               int verbose){
+MonteCarloRenormalizationGroup::MonteCarloRenormalizationGroup(int b){
     
     b_ = b;
-    verbose_ = verbose;
     
     MPI_Comm_size(MPI_COMM_WORLD, &n_processes_);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
     
     if(rank_ == 0){
+        
         printf("\n=============================================\n");
         printf("==========       MONTE CARLO       ==========\n");
         printf("==========  RENORMALIZATION GROUP  ==========\n");
@@ -17,10 +16,6 @@ MonteCarloRenormalizationGroup::MonteCarloRenormalizationGroup(int b,
         
         print_bold("* Using "+std::to_string(n_processes_)+" parallel process(es)\n");
         print_bold("* Scaling factor b = "+std::to_string(b_)+"\n");
-        
-        if(verbose_ > 1 && n_processes_ > 1){
-            print_bold("* Printed spin lattices belong to root process\n");
-        }
     }
 }
 
@@ -35,9 +30,8 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
         print_vec2D(Kc);
         
         // open file
-        std::string Kstr = get_string(Kc);
         std::string filename = "critical_exponent_s_"+std::to_string(n_samples)
-                               +"_N_"+std::to_string(N0)+Kstr+".txt";
+                               +"_N_.txt";
         fptr = fopen(filename.c_str(), "w");
         fprintf(fptr, "# %23s  %25s\n", "Blocking Level n", "Critical Exponent nu");
     }
@@ -61,9 +55,9 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
         print_vec2D(K0);
         
         // open file
-        std::string Kstr = get_string(K0);
+
         std::string filename = "critical_point_s_"+std::to_string(n_samples)
-                               +"_L_"+std::to_string(L0)+Kstr+".txt";
+                               +"_L_"+std::to_string(L0)+".txt";
         fptr = fopen(filename.c_str(), "w");
         fprintf(fptr, "# %13s  %15s  %15s\n", "Iteration", "K1", "K2");
     }
@@ -104,8 +98,6 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
                                                             int L0,
                                                             vec2D K){
     
-    FILE* fptr = NULL;
-
     int S0 = L0/b_;
     int n_transformations = floor(log(S0)/log(b_))-2;
     int n_samples_loc = split_samples(n_samples);
@@ -113,16 +105,16 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
 
     // equilibrate initial large lattice
     Ising2D* pIsingL0;
-    pIsingL0 = new Ising2D(L0, K, verbose_);
-    pIsingL0->equilibrate(n_samples_eq, fptr);
+    pIsingL0 = new Ising2D(L0, K);
+    pIsingL0->equilibrate(n_samples_eq);
     
     // apply 1 transformation to large lattice
     Ising2D* pIsingL = pIsingL0->block_spin_transformation(b_);
     
     // equilibrate small lattice with the same number of
     // lattice sites as transformed large lattice
-    Ising2D* pIsingS0 = new Ising2D(S0, K, verbose_);
-    pIsingS0->equilibrate(n_samples_eq, fptr);
+    Ising2D* pIsingS0 = new Ising2D(S0, K);
+    pIsingS0->equilibrate(n_samples_eq);
     
     // transformed small lattice at n = 0
     Ising2D* pIsingS = pIsingS0;
@@ -186,7 +178,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
         vec2D dK = (dSL_dK-dSS_dK).inverse() * (SL_avg-SS_avg);
         Kc = K-dK;
         
-        if(rank_ == 0 && verbose_ > 0){
+        if(rank_ == 0){
             
             printf("Kc = ");
             print_vec2D(Kc);
@@ -203,17 +195,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
 }
 
 
-std::string MonteCarloRenormalizationGroup::get_string(vec2D K){
-    
-    std::stringstream ss_K1, ss_K2;
-    ss_K1 << std::setprecision(3) << K(0);
-    ss_K2 << std::setprecision(3) << K(1);
-    
-    std::string str = "_K1_"+ss_K1.str()
-                      +"_K2_"+ss_K2.str();
-    
-    return str;
-}
+
 
 int MonteCarloRenormalizationGroup::split_samples(int n_samples){
     

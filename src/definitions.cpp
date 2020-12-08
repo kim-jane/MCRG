@@ -57,3 +57,11 @@ bool print_iter(int i){
     return print;
 }
 
+std::string get_rounded_str(double num){
+    
+    std::stringstream ss;
+    ss << std::setprecision(3) << num;
+    std::string str = ss.str();
+    
+    return str;
+}

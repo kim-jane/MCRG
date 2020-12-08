@@ -1,67 +1,47 @@
 #include "ising.hpp"
 
 Ising2D::Ising2D(unsigned N,
-                 vec2D K,
-                 int verbose){
+                 vec2D K){
     
     MPI_Comm_size(MPI_COMM_WORLD, &n_processes_);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
     
     N_ = N;
     K_ = K;
-    verbose_ = verbose;
-    
     a_ = 1;
     n_spins_ = N_*N_;
     rand_spin_index_ = std::uniform_int_distribution<int>(0,N_-1);
 }
 
-void Ising2D::equilibrate(int n_samples, FILE* fptr){
+void Ising2D::equilibrate(int n_samples){
 
+    // each process opens file
+    std::string filename = "equilibrate_N_"+std::to_string(N_)
+                           +"_K1_"+get_rounded_str(K_(0))
+                           +"_K2_"+get_rounded_str(K_(1))
+                           +"_p_"+std::to_string(rank_)
+                           +".txt";
+
+    FILE* fptr = fopen(filename.c_str(), "w");
+    fprintf(fptr, "# %s, %s, %s\n", "Iteration", "E/spin", "M/spin");
+
+    
+    // initialize and sample
     initialize_spins();
+    double e, m;
+    for(int n = 0; n <= n_samples; ++n){
 
-    if(rank_ == 0){
+        sample_spins();
+        e = calc_energy();
+        m = calc_magnetization();
         
-        if(fptr != NULL){
-            fprintf(fptr, "# %13s, %10s, %10s, %10s, %10s\n", "Iteration", "E", "E/spin", "M", "M/spin");
-        }
-
-        if(verbose_ > 0){
-            printf("Equilibrating %i N = %i lattice(s) at K = ", n_processes_, N_);
-            print_vec2D(K_);
-        }
-        if(verbose_ > 1){
-            printf("%15s %10s %10s \n", "Iteration", "E/spin", "M/spin");
+        if(rank_ == 0){
+            fprintf(fptr, "%i, %10.7lf, %10.7lf\n", n, e, m);
         }
     }
     
-    double E, M, e, m;
-    for(int n = 1; n <= n_samples; ++n){
-        
-        sample_spins();
-        E = calc_energy();
-        M = calc_magnetization();
-        e = E/n_spins_;
-        m = M/n_spins_;
-        
-        if(rank_ == 0){
-            
-            if(fptr != NULL){
-                fprintf(fptr, "%15i, %10.7e, %10.7e, %10.7e, %10.7e,\n", n, E, e, M, m);
-            }
-            
-            if(verbose_ > 1 && print_iter(n)){
-                printf("%15i %10lf %10lf \n", n, e, m);
-            }
-        }
-    }
-
-    if(rank_ == 0 && verbose_ > 1){
-        printf("\nEquilibrated spins\n");
-        display_spins();
-    }
+    fclose(fptr);
 }
-
 
 
 double Ising2D::calc_energy(){
@@ -76,19 +56,19 @@ double Ising2D::calc_energy(){
             nnn = next_nearest_neighbors(i,j);
             
             for(int n = 0; n < 4; ++n){
-                E += K_[0]*spins_(i,j)*spins_(nn(n,0),nn(n,1));
-                E += K_[1]*spins_(i,j)*spins_(nnn(n,0),nnn(n,1));
+                E += K_(0)*spins_(i,j)*spins_(nn(n,0),nn(n,1));
+                E += K_(1)*spins_(i,j)*spins_(nnn(n,0),nnn(n,1));
             }
         }
     }
     
-    return E/4.0;
+    return E/(4.0*n_spins_);
 }
 
 
 double Ising2D::calc_magnetization(){
     
-    return spins_.sum();
+    return spins_.sum()/(double)n_spins_;
 }
 
 vec2D Ising2D::calc_spin_interactions(){
@@ -137,8 +117,8 @@ double Ising2D::calc_probability_flip(int i, int j){
     
     double dE = 0.0;
     for(int n = 0; n < 4; ++n){
-        dE += K_[0]*spins_(nn(n,0),nn(n,1));
-        dE += K_[1]*spins_(nnn(n,0),nnn(n,1));
+        dE += K_(0)*spins_(nn(n,0),nn(n,1));
+        dE += K_(1)*spins_(nnn(n,0),nnn(n,1));
     }
     
     dE *= 2.0*spins_(i,j);
@@ -154,11 +134,6 @@ void Ising2D::initialize_spins(){
         for(int j = 0; j < N_; ++j){
             spins_(i,j) = rand_spin();
         }
-    }
-    
-    if(rank_ == 0 && verbose_ > 1){
-        printf("Initial random spins for N = %i\n", N_);
-        display_spins();
     }
 }
 
@@ -235,18 +210,9 @@ Ising2D* Ising2D::block_spin_transformation(int b){
         }
     }
     
-    Ising2D* pIsing = new Ising2D(Nb, K_, verbose_);
+    Ising2D* pIsing = new Ising2D(Nb, K_);
     pIsing->spins_ = block_spins;
     pIsing->a_ = a_*b;
-    
-    if(rank_ == 0){
-        if(verbose_ > 0){
-            printf("Block spin transformation N = %i --> %i\n", N_, Nb);
-        }
-        if(verbose_ > 1){
-            pIsing->display_spins();
-        }
-    }
 
     return pIsing;
 }

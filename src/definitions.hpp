@@ -41,3 +41,4 @@ extern void print_bold(std::string message);
 extern void print_error(std::string message);
 extern void print_vec2D(vec2D v);
 extern bool print_iter(int i);
+extern std::string get_rounded_str(double num);
