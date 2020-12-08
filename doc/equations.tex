@@ -28,9 +28,91 @@
 \begin{document}
 
 Hamiltonian:
-
 \begin{equation}
-H =
+\mathcal{H} = \beta H = \sum_{\alpha} K_\alpha S_\alpha \\
 \end{equation}
+
+
+Truncate to nearest neighbor (NN) and next nearest neighbor (NNN) spin interactions:
+\begin{equation}
+\mathcal{H} \approx K_1 S_1 + K_2 S_2 
+= K_1 \sum_{\langle i, j \rangle} \sigma_i \sigma_j + K_2 \sum_{\langle \langle i, j \rangle \rangle} \sigma_i \sigma_j \\
+\end{equation}
+
+Known critical temperature: 
+\begin{equation}
+T_c = - \frac{2 J}{\ln (1+\sqrt{2})} \approx - 2.27 J
+\end{equation}
+
+Expected critical coupling:
+\begin{equation}
+K_c = \frac{J}{T_c} = -\frac{\ln (1+\sqrt{2})}{2} \approx -0.44
+\end{equation}
+
+Probability of spin flip:
+\begin{equation}
+P(\sigma_i \rightarrow -\sigma_i) = \exp(-\Delta \mathcal{E})\\
+\end{equation}
+\begin{equation}
+\Delta \mathcal{E} 
+= -2 \sigma_i  \left( K_1 \sum_{\langle j \rangle} \sigma_j 
++ K_2\sum_{\langle \langle j \rangle \rangle} \sigma_j \right)\\
+\end{equation}
+
+Magnetization:
+\begin{equation}
+\mathcal{M} 
+= \sum_i \sigma_i
+\end{equation}
+
+Variances of energy and magnetization:
+\begin{equation}
+\sigma_\mathcal{E} ^2
+=\langle  \mathcal{E} ^2 \rangle 
+- \langle  \mathcal{E}  \rangle ^2
+= \sum_{\alpha \beta} K_\alpha K_\beta \big( \langle S_\alpha S_\beta \rangle
+- \langle S_\alpha  \rangle 
+\langle  S_\beta \rangle \big)\\
+\end{equation}
+\begin{equation}
+\sigma_{\mathcal{M}, \alpha \beta} ^2
+=\langle  \mathcal{M} ^2 \rangle 
+- \langle  \mathcal{M}  \rangle ^2
+=  \big( \langle S_\alpha S_\beta \rangle
+- \langle S_\alpha  \rangle 
+\langle  S_\beta \rangle \big)\\
+\end{equation}
+
+
+Linearized transformation matrix:
+\begin{equation}
+T_{\alpha, \beta}^{(n)} = \frac{\partial K_\alpha^{(n+1)}}{\partial K_\beta^{(n)}}\\
+\end{equation}
+
+Chain rule and invert:
+\begin{equation}
+\frac{\partial \langle S_\gamma^{(n+1)} \rangle}{\partial K_\beta^{(n)}}
+= \frac{\partial \langle S_\gamma^{(n+1)} \rangle}{\partial K_\alpha^{(n+1)}}
+\frac{\partial K_\alpha^{(n+1)}}{\partial K_\beta^{(n)}} 
+\ \ \Longrightarrow \ \ 
+T_{\alpha, \beta}^{(n)} 
+= \left[ \frac{\partial \langle S_\gamma^{(n+1)} \rangle}{\partial K_\alpha^{(n+1)}} \right]^{-1} \frac{\partial \langle S_\gamma^{(n+1)} \rangle}{\partial K_\beta^{(n)}} \\ 
+\end{equation}
+
+where
+\begin{equation}
+\frac{\partial \langle S_\gamma^{(n+1)} \rangle}{\partial K_\alpha^{(n+1)}}  
+=  \Big\langle S_\gamma^{(n+1)} S_\alpha^{(n+1)} \Big\rangle
+- \Big\langle S_\gamma^{(n+1)}  \Big\rangle 
+\Big\langle  S_\alpha^{(n+1)}  \Big\rangle
+\end{equation}
+\begin{equation}
+\frac{\partial \langle S_\gamma^{(n+1)} \rangle}{\partial K_\beta^{(n)}}  
+=  \Big\langle S_\gamma^{(n+1)} S_\beta^{(n)} \Big\rangle
+- \Big\langle S_\gamma^{(n+1)}  \Big\rangle 
+\Big\langle  S_\beta^{(n)}  \Big\rangle
+\end{equation}
+
+
 
 \end{document}

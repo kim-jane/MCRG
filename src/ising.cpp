@@ -1,54 +1,65 @@
 #include "ising.hpp"
 
 Ising2D::Ising2D(unsigned N,
-                 vec2D K){
+                 vec2D K,
+                 int verbose){
+    
+    MPI_Comm_size(MPI_COMM_WORLD, &n_processes_);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
     
     N_ = N;
     K_ = K;
+    verbose_ = verbose;
     
+    a_ = 1;
     n_spins_ = N_*N_;
     rand_spin_index_ = std::uniform_int_distribution<int>(0,N_-1);
 }
 
-void Ising2D::equilibrate(){
+void Ising2D::equilibrate(int n_samples, FILE* fptr){
 
     initialize_spins();
-    //printf("Initial random spins for N = %i, K = (%.3f, %.3f)\n\n", N_, K_(0), K_(1));
-    //display_spins();
 
-    printf("Equilibrating...\n\n");
-    printf("%15s %10s %10s \n", "Iteration", "E/spin", "M/spin");
-    fflush(stdout);
+    if(rank_ == 0){
+        
+        if(fptr != NULL){
+            fprintf(fptr, "# %13s, %10s, %10s, %10s, %10s\n", "Iteration", "E", "E/spin", "M", "M/spin");
+        }
+
+        if(verbose_ > 0){
+            printf("Equilibrating %i N = %i lattice(s) at K = ", n_processes_, N_);
+            print_vec2D(K_);
+        }
+        if(verbose_ > 1){
+            printf("%15s %10s %10s \n", "Iteration", "E/spin", "M/spin");
+        }
+    }
     
-    int i = 0;
-    int patience0 = 2000;
-    int patience = patience0;
-    double E = 1.0;
-    double E_min = 1.0;
-    double M = 0.0;
-    
-    while(patience > 0){
+    double E, M, e, m;
+    for(int n = 1; n <= n_samples; ++n){
         
         sample_spins();
         E = calc_energy();
         M = calc_magnetization();
+        e = E/n_spins_;
+        m = M/n_spins_;
         
-        if(print(i)) printf("%15i %10lf %10lf \n", i, E, M);
-        
-        if(E < E_min){
-            E_min = E;
-            patience = patience0;
-        }
-        else{
-            patience--;
-        }
+        if(rank_ == 0){
             
-        i++;
+            if(fptr != NULL){
+                fprintf(fptr, "%15i, %10.7e, %10.7e, %10.7e, %10.7e,\n", n, E, e, M, m);
+            }
+            
+            if(verbose_ > 1 && print_iter(n)){
+                printf("%15i %10lf %10lf \n", n, e, m);
+            }
+        }
     }
-    
-    printf("%15i %10lf %10lf \n\n", i, E, M);
-    //printf("Equilibrated spins\n\n");
-    //display_spins();
+
+    if(rank_ == 0 && verbose_ > 1){
+        printf("\nEquilibrated spins\n");
+        display_spins();
+    }
 }
 
 
@@ -56,45 +67,45 @@ void Ising2D::equilibrate(){
 double Ising2D::calc_energy(){
     
     double E = 0.0;
-    imat NN, NNN;
+    imat nn, nnn;
     
     for(int i = 0; i < N_; ++i){
         for(int j = 0; j < N_; ++j){
             
-            NN = nearest_neighbors(i,j);
-            NNN = next_nearest_neighbors(i,j);
+            nn = nearest_neighbors(i,j);
+            nnn = next_nearest_neighbors(i,j);
             
             for(int n = 0; n < 4; ++n){
-                E += K_[0]*spins_(i,j)*spins_(NN(n,0),NN(n,1));
-                E += K_[1]*spins_(i,j)*spins_(NNN(n,0),NNN(n,1));
+                E += K_[0]*spins_(i,j)*spins_(nn(n,0),nn(n,1));
+                E += K_[1]*spins_(i,j)*spins_(nnn(n,0),nnn(n,1));
             }
         }
     }
     
-    return E/(4.0*n_spins_);
+    return E/4.0;
 }
 
 
 double Ising2D::calc_magnetization(){
     
-    return (double)spins_.sum()/n_spins_;
+    return spins_.sum();
 }
 
-vec2D Ising2D::calc_correlation(){
+vec2D Ising2D::calc_spin_interactions(){
     
-    imat NN, NNN;
+    imat nn, nnn;
     vec2D S;
     S.setZero();
     
     for(int i = 0; i < N_; ++i){
         for(int j = 0; j < N_; ++j){
             
-            NN = nearest_neighbors(i,j);
-            NNN = next_nearest_neighbors(i,j);
+            nn = nearest_neighbors(i,j);
+            nnn = next_nearest_neighbors(i,j);
             
             for(int n = 0; n < 4; ++n){
-                S(0) += spins_(i,j)*spins_(NN(n,0),NN(n,1));
-                S(1) += spins_(i,j)*spins_(NNN(n,0),NNN(n,1));
+                S(0) += spins_(i,j)*spins_(nn(n,0),nn(n,1));
+                S(1) += spins_(i,j)*spins_(nnn(n,0),nnn(n,1));
             }
         }
     }
@@ -121,24 +132,18 @@ void Ising2D::sample_spins(){
 
 double Ising2D::calc_probability_flip(int i, int j){
     
-    imat NN = nearest_neighbors(i,j);
-    imat NNN = next_nearest_neighbors(i,j);
+    imat nn = nearest_neighbors(i,j);
+    imat nnn = next_nearest_neighbors(i,j);
     
     double dE = 0.0;
     for(int n = 0; n < 4; ++n){
-        dE += K_[0]*spins_(NN(n,0),NN(n,1));
-        dE += K_[1]*spins_(NNN(n,0),NNN(n,1));
+        dE += K_[0]*spins_(nn(n,0),nn(n,1));
+        dE += K_[1]*spins_(nnn(n,0),nnn(n,1));
     }
     
     dE *= 2.0*spins_(i,j);
     
     return exp(dE);
-}
-
-
-void Ising2D::set_spins(imat new_spins){
-    
-    spins_ = new_spins;
 }
 
 
@@ -150,43 +155,56 @@ void Ising2D::initialize_spins(){
             spins_(i,j) = rand_spin();
         }
     }
+    
+    if(rank_ == 0 && verbose_ > 1){
+        printf("Initial random spins for N = %i\n", N_);
+        display_spins();
+    }
 }
 
 
 imat Ising2D::nearest_neighbors(int i, int j){
     
-    imat NN(4,2);
+    imat nn(4,2);
     
-    NN(0,0) = (i+1)%N_;
-    NN(0,1) = j;
-    NN(1,0) = (i-1)%N_;
-    NN(1,1) = j;
-    NN(2,0) = i;
-    NN(2,1) = (j+1)%N_;
-    NN(3,0) = i;
-    NN(3,1) = (j-1)%N_;
+    nn(0,0) = (i+1)%N_;
+    nn(0,1) = j;
+    nn(1,0) = (i-1)%N_;
+    nn(1,1) = j;
+    nn(2,0) = i;
+    nn(2,1) = (j+1)%N_;
+    nn(3,0) = i;
+    nn(3,1) = (j-1)%N_;
     
-    return NN;
+    return nn;
 }
 
 
 imat Ising2D::next_nearest_neighbors(int i, int j){
     
-    imat NNN(4,2);
+    imat nnn(4,2);
     
-    NNN(0,0) = (i+1)%N_;
-    NNN(0,1) = (j+1)%N_;
-    NNN(1,0) = (i-1)%N_;
-    NNN(1,1) = (j+1)%N_;
-    NNN(2,0) = (i+1)%N_;
-    NNN(2,1) = (j-1)%N_;
-    NNN(3,0) = (i-1)%N_;
-    NNN(3,1) = (j-1)%N_;
+    nnn(0,0) = (i+1)%N_;
+    nnn(0,1) = (j+1)%N_;
+    nnn(1,0) = (i-1)%N_;
+    nnn(1,1) = (j+1)%N_;
+    nnn(2,0) = (i+1)%N_;
+    nnn(2,1) = (j-1)%N_;
+    nnn(3,0) = (i-1)%N_;
+    nnn(3,1) = (j-1)%N_;
     
-    return NNN;
+    return nnn;
 }
 
 Ising2D* Ising2D::block_spin_transformation(int b){
+    
+    if(N_%b != 0){
+        if(rank_ == 0){
+            print_error("Lattice size is not divisible by the scaling factor.\n");
+            
+        }
+        exit(1);
+    }
     
     int Nb = N_/b;
     int spin_tot;
@@ -217,16 +235,21 @@ Ising2D* Ising2D::block_spin_transformation(int b){
         }
     }
     
-    Ising2D* pIsing = new Ising2D(Nb, K_);
-    pIsing->set_spins(block_spins);
+    Ising2D* pIsing = new Ising2D(Nb, K_, verbose_);
+    pIsing->spins_ = block_spins;
+    pIsing->a_ = a_*b;
     
-    printf("Block spin transformation N = %i --> %i\n\n", N_, Nb);
-    pIsing->display_spins();
-    
+    if(rank_ == 0){
+        if(verbose_ > 0){
+            printf("Block spin transformation N = %i --> %i\n", N_, Nb);
+        }
+        if(verbose_ > 1){
+            pIsing->display_spins();
+        }
+    }
+
     return pIsing;
 }
-
-
 
 
 void Ising2D::display_spins(){
@@ -242,5 +265,6 @@ void Ising2D::display_spins(){
         }
         printf("\n");
     }
-    printf("\n");
+    printf("Number of spins = %i\n", N_*N_);
+    printf("Lattice spacing = %i\n", a_);
 }

@@ -38,4 +38,6 @@ inline auto rand_unif(){
 extern void display_spin_up();
 extern void display_spin_down();
 extern void print_bold(std::string message);
-extern bool print(int i);
+extern void print_error(std::string message);
+extern void print_vec2D(vec2D v);
+extern bool print_iter(int i);

@@ -21,7 +21,17 @@ void print_bold(std::string message){
     printf("\033[1;37m%2s\033[0m", message.c_str());
 }
 
-bool print(int i){
+void print_error(std::string message){
+    
+    printf("\033[1;31mERROR: %2s\033[0m\n", message.c_str());
+}
+
+void print_vec2D(vec2D v){
+    
+    printf("(%.5lf, %.5lf)\n", v(0), v(1));
+}
+
+bool print_iter(int i){
     
     bool print = false;
     
@@ -46,3 +56,4 @@ bool print(int i){
     
     return print;
 }
+

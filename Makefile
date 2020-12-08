@@ -1,4 +1,6 @@
-CXX = g++
+# To silence PMIX errors: export PMIX_MCA_gds=hash
+
+CXX = mpicxx
 CXXFLAGS = -std=c++14 -Wall -O3
 
 
@@ -26,21 +28,22 @@ clean:
 run: ${OBJECTS}
 	${CXX} ${CXXFLAGS} ${OBJECTS} -o run
 	
+build/main.o: src/main.cpp
+	${CXX} ${CXXFLAGS} -c src/main.cpp -o build/main.o
 
-definitions.o: definitions.cpp
-	${CXX} ${CXXFLAGS} -c definitions.cpp -o definitions.o
+build/definitions.o: src/definitions.cpp
+	${CXX} ${CXXFLAGS} -c src/definitions.cpp -o build/definitions.o
 
-ising.o: ising.cpp
-	${CXX} ${CXXFLAGS} -c ising.cpp -o ising.o
+build/ising.o: src/ising.cpp
+	${CXX} ${CXXFLAGS} -c src/ising.cpp -o build/ising.o
 	
-mcrg.o: mcrg.cpp
-	${CXX} ${CXXFLAGS} -c mcrg.cpp -o mcrg.o
+build/mcrg.o: src/mcrg.cpp
+	${CXX} ${CXXFLAGS} -c src/mcrg.cpp -o build/mcrg.o
 	
-test_ising.o: test_ising.cpp
-	${CXX} ${CXXFLAGS} -c test_ising.cpp -o test_ising.o
+build/test_ising.o: src/test_ising.cpp
+	${CXX} ${CXXFLAGS} -c src/test_ising.cpp -o build/test_ising.o
 
-test_mcrg.o: test_mcrg.cpp
-	${CXX} ${CXXFLAGS} -c test_mcrg.cpp -o test_mcrg.o
+build/test_mcrg.o: src/test_mcrg.cpp
+	${CXX} ${CXXFLAGS} -c src/test_mcrg.cpp -o build/test_mcrg.o
 
-main.o: main.cpp
-	${CXX} ${CXXFLAGS} -c main.cpp -o main.o
+
