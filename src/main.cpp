@@ -6,7 +6,7 @@ int main(){
     MPI_Init(NULL, NULL);
 
     int b = 2;               // scaling factor
-    int L0 = 64;
+    int L0 = 32;
     //int N0 = 64;             // initial lattice size
     
     int n_samples = 1E6;     // MC samples
@@ -20,7 +20,7 @@ int main(){
     vec2D Kc;
 
     MonteCarloRenormalizationGroup MCRG(b, verbose);
-    Kc = MCRG.locate_critical_point(200, n_samples, L0, K0);
+    Kc = MCRG.locate_critical_point(10, n_samples, L0, K0);
     //nu = MCRG.calc_critical_exponent(10*n_samples, 2*N0, Kc);
     
 
