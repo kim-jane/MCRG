@@ -19,13 +19,11 @@ public:
 
     vec2D locate_critical_point(int n_iterations,
                                 int n_samples,
-                                int L,
-                                int S,
+                                int L0,
                                 vec2D K0);
     
     vec2D approx_critical_point(int n_samples,
-                                int L,
-                                int S,
+                                int L0,
                                 vec2D K);
     
     std::string get_string(vec2D K);
