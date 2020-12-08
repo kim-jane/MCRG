@@ -9,7 +9,7 @@ int main(){
     int L0 = 64;
     //int N0 = 64;             // initial lattice size
     
-    int n_samples = 1E5;     // MC samples
+    int n_samples = 1E6;     // MC samples
     int verbose = 1;
     
     vec2D K0;                // initial couplings
