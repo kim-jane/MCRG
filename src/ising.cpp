@@ -35,9 +35,7 @@ void Ising2D::equilibrate(int n_samples){
         e = calc_energy();
         m = calc_magnetization();
         
-        if(rank_ == 0){
-            fprintf(fptr, "%i, %10.7lf, %10.7lf\n", n, e, m);
-        }
+        fprintf(fptr, "%i, %10.7lf, %10.7lf\n", n, e, m);
     }
     
     fclose(fptr);
