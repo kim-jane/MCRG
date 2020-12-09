@@ -23,7 +23,7 @@ void Ising2D::equilibrate(int n_samples){
                                +".txt";
 
         fptr = fopen(filename.c_str(), "w");
-        fprintf(fptr, "# Using %i parallel processes", n_processes_);
+        fprintf(fptr, "# Using %i parallel processes\n", n_processes_);
         fprintf(fptr, "# %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n",
                 "Iteration", "Avg E/spin", "Avg E", "Stddev E", "Heat Capacity",
                 "Avg M/spin", "Avg |M|", "Avg M", "Stddev M", "Susceptibility");
@@ -67,7 +67,7 @@ void Ising2D::equilibrate(int n_samples){
             E_sigma = sqrt(E_sigma);
             M_sigma = sqrt(M_sigma);
             
-            fprintf(fptr, "%i, %10.7lf, %10.7lf, %10.7lf, %10.7lf, %10.7lf, %10.7lf, %10.7lf, %10.7lf, %10.7lf\n", n, E_avg/n_spins_, E_avg, E_sigma, C, M_avg/n_spins_, M_avg, absM_avg, M_sigma, Chi);
+            fprintf(fptr, "%i, %10.7e, %10.7e, %10.7e, %10.7e, %10.7e, %10.7e, %10.7e, %10.7e, %10.7e\n", n, E_avg/n_spins_, E_avg, E_sigma, C, M_avg/n_spins_, M_avg, absM_avg, M_sigma, Chi);
         }
     }
     
