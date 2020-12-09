@@ -36,9 +36,9 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
         fprintf(fptr, "# %23s  %25s\n", "Blocking Level n", "Critical Exponent nu");
     }
     
-    int n_samples_eq = 1E4;
+    int n_samples_eq = 1E5;
     int n_samples_loc = split_samples(n_samples);
-    int n_transformations = floor(log(N0)/log(b_))-2;
+    int n_transformations = floor(log(N0)/log(b_))-1;
     
 }
 
@@ -101,7 +101,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
     int S0 = L0/b_;
     int n_transformations = floor(log(S0)/log(b_))-2;
     int n_samples_loc = split_samples(n_samples);
-    int n_samples_eq = 1E4;
+    int n_samples_eq = 1E5;
 
     // equilibrate initial large lattice
     Ising2D* pIsingL0;

@@ -11,6 +11,17 @@ int main(){
     test.equilibrate_sweepK1(1E6, 32, -1.0, -0.2, 0.1);
     test.equilibrate_sweepK1(1E6, 64, -1.0, -0.2, 0.1);
     
+    /*
+    int b = 2;
+    vec2D Kc;
+    Kc(0) = -log(1+sqrt(2))/2;
+    Kc(1) = 0.0;
+    
+    MonteCarloRenormalizationGroup MCRG(b);
+    double nu = MCRG.calc_critical_exponent(1E6, 64, Kc);
+    
+    */
+    
     MPI_Finalize();
     return 0;
 }
