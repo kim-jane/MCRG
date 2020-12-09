@@ -7,9 +7,8 @@ int main(){
     MPI_Init(NULL, NULL);
 
     TestIsing2D test;
-    test.equilibrate_sweepK1(2E5, 16, -1.0, -0.2, 0.1);
-    test.equilibrate_sweepK1(2E5, 32, -1.0, -0.2, 0.1);
-    test.equilibrate_sweepK1(2E5, 64, -1.0, -0.2, 0.1);
+    test.equilibrate_sweepK1(2E5, 4, -1.0, -0.2, 0.1);
+    test.equilibrate_sweepK1(2E5, 128, -1.0, -0.2, 0.1);
     
     /*
     int b = 2;

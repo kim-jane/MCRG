@@ -14,9 +14,9 @@ for file in filelist:
     K1.append(float(file[i:j]))
 
     data = np.loadtxt(file, delimiter=",")
-    m.append(data[-1, 5])
+    m.append(data[-1, -1])
     
-    plt.plot(data[:,0], data[:,5])
+    plt.plot(data[:,0], data[:,-1])
     
     
 plt.legend()
