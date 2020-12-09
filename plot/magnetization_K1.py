@@ -5,7 +5,7 @@ import glob
 K1 = []
 m = []
 
-filelist = glob.glob('data/equilibrate_N_64_*.txt')
+filelist = glob.glob('data/equilibrate_N_16_*.txt')
 
 for file in filelist:
 

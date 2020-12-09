@@ -15,30 +15,63 @@ Ising2D::Ising2D(unsigned N,
 
 void Ising2D::equilibrate(int n_samples){
 
-    // each process opens file
-    std::string filename = "equilibrate_N_"+std::to_string(N_)
-                           +"_K1_"+get_rounded_str(K_(0))
-                           +"_K2_"+get_rounded_str(K_(1))
-                           +"_p_"+std::to_string(rank_)
-                           +".txt";
+    FILE* fptr = NULL;
+    if(rank_ == 0){
+        std::string filename = "equilibrate_N_"+std::to_string(N_)
+                               +"_K1_"+get_rounded_str(K_(0))
+                               +"_K2_"+get_rounded_str(K_(1))
+                               +".txt";
 
-    FILE* fptr = fopen(filename.c_str(), "w");
-    fprintf(fptr, "# %s, %s, %s\n", "Iteration", "E/spin", "M/spin");
+        fptr = fopen(filename.c_str(), "w");
+        fprintf(fptr, "# Using %i parallel processes", n_processes_);
+        fprintf(fptr, "# %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n",
+                "Iteration", "Avg E/spin", "Avg E", "Stddev E", "Heat Capacity",
+                "Avg M/spin", "Avg |M|", "Avg M", "Stddev M", "Susceptibility");
+    }
 
-    
-    // initialize and sample
     initialize_spins();
-    double e, m;
+    double E, M, E2, M2, absM;
+    double E_avg, M_avg, E2_avg, M2_avg, absM_avg;
+    double E_sigma, M_sigma;
+    double C, Chi;
+    
     for(int n = 0; n <= n_samples; ++n){
 
         sample_spins();
-        e = calc_energy();
-        m = calc_magnetization();
+        E = calc_energy();
+        M = calc_magnetization();
+        E2 = E*E;
+        M2 = M*M;
+        absM = fabs(M);
         
-        fprintf(fptr, "%i, %10.7lf, %10.7lf\n", n, e, m);
+        MPI_Reduce(&E, &E_avg, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&M, &M_avg, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&E2, &E2_avg, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&M2, &M2_avg, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&absM, &absM_avg, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+        if(rank_ == 0){
+            
+            E_avg /= n_processes_;
+            M_avg /= n_processes_;
+            E2_avg /= n_processes_;
+            M2_avg /= n_processes_;
+            absM_avg /= n_processes_;
+            
+            E_sigma = E2_avg-E_avg*E_avg;
+            M_sigma = M2_avg-M_avg*M_avg;
+            
+            C = E_sigma*K_(0)*K_(0);
+            Chi = -M_sigma*K_(0);
+            
+            E_sigma = sqrt(E_sigma);
+            M_sigma = sqrt(M_sigma);
+            
+            fprintf(fptr, "%i, %10.7lf, %10.7lf, %10.7lf, %10.7lf, %10.7lf, %10.7lf, %10.7lf, %10.7lf, %10.7lf\n", n, E_avg/n_spins_, E_avg, E_sigma, C, M_avg/n_spins_, M_avg, absM_avg, M_sigma, Chi);
+        }
     }
     
-    fclose(fptr);
+    if(rank_ == 0) fclose(fptr);
 }
 
 
@@ -60,13 +93,13 @@ double Ising2D::calc_energy(){
         }
     }
     
-    return E/(4.0*n_spins_);
+    return E;
 }
 
 
 double Ising2D::calc_magnetization(){
     
-    return spins_.sum()/(double)n_spins_;
+    return spins_.sum();
 }
 
 vec2D Ising2D::calc_spin_interactions(){
@@ -88,7 +121,7 @@ vec2D Ising2D::calc_spin_interactions(){
         }
     }
     
-    return S/4.0;
+    return S;
 }
 
 void Ising2D::sample_spins(){

@@ -23,7 +23,7 @@ all: run
 
 
 clean:
-	rm -f run ${OBJECTS}
+	rm -f run ${OBJECTS} slurm*
 
 run: ${OBJECTS}
 	${CXX} ${CXXFLAGS} ${OBJECTS} -o run
