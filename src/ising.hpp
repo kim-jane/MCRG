@@ -20,7 +20,7 @@ public:
     
     void sample_spins();
     void set_spins(imat new_spins);
-    void equilibrate(int n_samples);
+    void equilibrate(int n_samples, bool write);
     double calc_magnetization();
     double calc_energy();
     vec2D calc_spin_interactions();

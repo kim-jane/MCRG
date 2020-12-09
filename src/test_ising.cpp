@@ -14,6 +14,6 @@ void TestIsing2D::equilibrate_sweepK1(int n_samples,
         K(1) = 0.0;
         
         Ising2D* pIsing = new Ising2D(N, K);
-        pIsing->equilibrate(n_samples);
+        pIsing->equilibrate(n_samples, true);
     }
 }

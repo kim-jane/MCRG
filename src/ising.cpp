@@ -13,10 +13,10 @@ Ising2D::Ising2D(unsigned N,
     rand_spin_index_ = std::uniform_int_distribution<int>(0,N_-1);
 }
 
-void Ising2D::equilibrate(int n_samples){
+void Ising2D::equilibrate(int n_samples, bool write){
 
     FILE* fptr = NULL;
-    if(rank_ == 0){
+    if(write && rank_ == 0){
         std::string filename = "equilibrate_N_"+std::to_string(N_)
                                +"_K1_"+get_rounded_str(K_(0))
                                +"_K2_"+get_rounded_str(K_(1))
@@ -24,14 +24,14 @@ void Ising2D::equilibrate(int n_samples){
 
         fptr = fopen(filename.c_str(), "w");
         fprintf(fptr, "# Using %i parallel processes\n", n_processes_);
-        fprintf(fptr, "# %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n",
-                "Iteration", "Avg E/spin", "Avg E", "Stddev E", "Heat Capacity",
-                "Avg M/spin", "Avg |M|", "Avg M", "Stddev M", "Susceptibility");
+        fprintf(fptr, "# %s, %s, %s, %s, %s, %s, %s\n",
+                "Iteration", "Avg E/spin", "Stddev E/spin", "Heat Capacity",
+                "Avg |M|/spin", "Stddev |M|/spin", "Susceptibility");
     }
 
     initialize_spins();
-    double E, M, E2, M2, absM;
-    double E_avg, M_avg, E2_avg, M2_avg, absM_avg;
+    double E, M, E2, M2;
+    double E_avg, M_avg, E2_avg, M2_avg;
     double E_sigma, M_sigma;
     double C, Chi;
     
@@ -39,24 +39,21 @@ void Ising2D::equilibrate(int n_samples){
 
         sample_spins();
         E = calc_energy();
-        M = calc_magnetization();
+        M = abs(calc_magnetization());
         E2 = E*E;
         M2 = M*M;
-        absM = fabs(M);
         
         MPI_Reduce(&E, &E_avg, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
         MPI_Reduce(&M, &M_avg, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
         MPI_Reduce(&E2, &E2_avg, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
         MPI_Reduce(&M2, &M2_avg, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-        MPI_Reduce(&absM, &absM_avg, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
-        if(rank_ == 0){
+        if(write && rank_ == 0){
             
             E_avg /= n_processes_;
             M_avg /= n_processes_;
             E2_avg /= n_processes_;
             M2_avg /= n_processes_;
-            absM_avg /= n_processes_;
             
             E_sigma = E2_avg-E_avg*E_avg;
             M_sigma = M2_avg-M_avg*M_avg;
@@ -67,11 +64,11 @@ void Ising2D::equilibrate(int n_samples){
             E_sigma = sqrt(E_sigma);
             M_sigma = sqrt(M_sigma);
             
-            fprintf(fptr, "%i, %10.7e, %10.7e, %10.7e, %10.7e, %10.7e, %10.7e, %10.7e, %10.7e, %10.7e\n", n, E_avg/n_spins_, E_avg, E_sigma, C, M_avg/n_spins_, M_avg, absM_avg, M_sigma, Chi);
+            fprintf(fptr, "%i, %10.7e, %10.7e, %10.7e, %10.7e, %10.7e, %10.7e\n", n, E_avg/n_spins_, E_sigma/n_spins_, C, M_avg/n_spins_, M_sigma/n_spins_, Chi);
         }
     }
     
-    if(rank_ == 0) fclose(fptr);
+    if(write && rank_ == 0) fclose(fptr);
 }
 
 
