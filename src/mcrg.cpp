@@ -251,6 +251,8 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
         }
     }
     
+    MPI_Barrier(MPI_COMM_WORLD);
+    
     return Kc;
 }
 
