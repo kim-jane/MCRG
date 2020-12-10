@@ -34,7 +34,7 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
         fprintf(fptr, "# %23s  %25s\n", "Blocking Level n", "Critical Exponent nu");
     }
     
-    int n_samples_eq = 1E4;
+    int n_samples_eq = 1E5;
     int n_samples_loc = split_samples(n_samples);
     int n_transformations = floor(log(N0)/log(b_));
     
@@ -98,7 +98,7 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
         printf("%i done sampling \n", rank_);
         dSb_dK = Sb_S_avg-Sb_avg*S_avg.transpose();
         dSb_dKb = Sb_Sb_avg-Sb_avg*Sb_avg.transpose();
-        T = dSb_dK * dSb_dKb.transpose();
+        T = dSb_dKb.inverse() * dSb_dK;
         EigenSolver<mat2D> solver(T);
         
         printf("%i eigenvalues: \n", rank_);
