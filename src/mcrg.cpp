@@ -90,7 +90,7 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
         
         dSb_dK = Sb_S_avg-Sb_avg*S_avg.transpose();
         dSb_dKb = Sb_Sb_avg-Sb_avg*Sb_avg.transpose();
-        T = dSb_dKb.inverse()* dSb_dK;
+        T = dSb_dKb.inverse() * dSb_dK;
         EigenSolver<mat2D> solver(T);
         
         std::cout << solver.eigenvalues() << std::endl;

@@ -118,7 +118,7 @@ vec2D Ising2D::calc_spin_interactions(){
         }
     }
     
-    return S;
+    return S/4.0;
 }
 
 void Ising2D::sample_spins(){
