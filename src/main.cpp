@@ -12,7 +12,7 @@ int main(){
     Kc(1) = 0.0;
     
     MonteCarloRenormalizationGroup MCRG(b);
-    double nu = MCRG.calc_critical_exponent(1E6, 64, Kc);
+    double nu = MCRG.calc_critical_exponent(1E6, 32, Kc);
     
     MPI_Finalize();
     return 0;
