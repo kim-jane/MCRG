@@ -113,11 +113,12 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
                                                             vec2D K0){
     FILE* fptr = NULL;
     if(rank_ == 0){
-        
+    
         // open file
-
-        std::string filename = "critical_point_s_"+std::to_string(n_samples)
-                               +"_L_"+std::to_string(L0)+".txt";
+        std::string filename = "critical_point_L_"+std::to_string(L0)
+                               +"_K1_"+get_rounded_str(K0(0))
+                               +"_K2_"+get_rounded_str(K0(1))
+                               +"_s_"+std::to_string(n_samples)+".txt";
         fptr = fopen(filename.c_str(), "w");
         fprintf(fptr, "# %13s  %15s  %15s\n", "Iteration", "K1", "K2");
     }
@@ -161,7 +162,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
     int S0 = L0/b_;
     int n_transformations = floor(log(S0)/log(b_))-1;
     int n_samples_loc = split_samples(n_samples);
-    int n_samples_eq = 1E5;
+    int n_samples_eq = 1E4;
 
     // equilibrate initial large lattice
     Ising2D* pIsingL0;
@@ -245,8 +246,6 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
             print_vec2D(Kc);
         }
         if(n < n_transformations-1){
-            //pIsingL0 = pIsingL0->block_spin_transformation(b_);
-            //pIsingS0 = pIsingS0->block_spin_transformation(b_);
             pIsingL = pIsingL->block_spin_transformation(b_);
             pIsingS = pIsingS->block_spin_transformation(b_);
         }

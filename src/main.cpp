@@ -12,7 +12,10 @@ int main(){
     Kc(1) = 0.0;
     
     MonteCarloRenormalizationGroup MCRG(b);
-    double nu = MCRG.calc_critical_exponent(1E6, 32, Kc);
+    //double nu = MCRG.calc_critical_exponent(1E6, 32, Kc);
+    
+    double Kc_approx = MCRG.approx_critical_point(1E6, 32, Kc);
+    std::cout << Kc_approx << std::endl;
     
     MPI_Finalize();
     return 0;
