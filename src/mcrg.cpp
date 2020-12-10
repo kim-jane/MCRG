@@ -41,6 +41,7 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
     // equilibrate initial system at critical coupling
     Ising2D* pIsing = new Ising2D(N0, Kc);
     pIsing->equilibrate(n_samples_eq, false);
+    if(rank_ == 0) pIsing->display_spins();
     
     // apply one RG transformation
     Ising2D* pIsingb = pIsing->block_spin_transformation(b_);
