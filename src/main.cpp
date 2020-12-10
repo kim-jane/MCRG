@@ -15,7 +15,6 @@ int main(){
     //double nu = MCRG.calc_critical_exponent(1E6, 32, Kc);
     
     vec2D Kc_approx = MCRG.approx_critical_point(1E6, 32, Kc);
-    std::cout << Kc_approx << std::endl;
     
     MPI_Finalize();
     return 0;
