@@ -24,22 +24,85 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
                                                               vec2D Kc){
     FILE* fptr = NULL;
     if(rank_ == 0){
-        
-        // print starting point
-        print_bold("* Calculating critical exponent nu at Kc = ");
-        print_vec2D(Kc);
-        
+    
         // open file
-        std::string filename = "critical_exponent_s_"+std::to_string(n_samples)
-                               +"_N_.txt";
+        std::string filename = "critical_exponent_N_"+std::to_string(N0)
+                               +"_K1_"+get_rounded_str(Kc(0))
+                               +"_K2_"+get_rounded_str(Kc(1))
+                               +"_s_"+std::to_string(n_samples)+".txt";
         fptr = fopen(filename.c_str(), "w");
         fprintf(fptr, "# %23s  %25s\n", "Blocking Level n", "Critical Exponent nu");
     }
     
     int n_samples_eq = 1E5;
     int n_samples_loc = split_samples(n_samples);
-    int n_transformations = floor(log(N0)/log(b_))-1;
+    int n_transformations = floor(log(N0)/log(b_))-2;
     
+    // equilibrate initial system at critical coupling
+    Ising2D* pIsing = new Ising2D(N0, Kc);
+    pIsing->equilibrate(n_samples_eq, false);
+    
+    // apply one RG transformation
+    Ising2D* pIsingb = pIsing->block_spin_transformation(b_);
+    
+    vec2D S, Sb;
+    vec2D S_avg, Sb_avg;
+    vec2D S_avg_loc, Sb_avg_loc;
+    mat2D Sb_S_avg, Sb_Sb_avg;
+    mat2D Sb_S_avg_loc, Sb_Sb_avg_loc;
+    mat2D dSb_dK, dSb_dKb;
+    mat2D T;
+    
+    // calculate correlation functions
+    for(int n = 0; n < n_transformations; ++n){
+        
+        S_avg_loc.setZero();
+        Sb_avg_loc.setZero();
+        Sb_S_avg_loc.setZero();
+        Sb_Sb_avg_loc.setZero();
+        
+        for(int samples = 0; samples < n_samples_loc; ++samples){
+            
+            // get new samples
+            pIsing->sample_spins();
+            pIsingb->sample_spins();
+            
+            // calculate spin interactions for each lattice
+            S = pIsing->calc_spin_interactions();
+            Sb = pIsingb->calc_spin_interactions();
+            
+            // add up values for averages
+            S_avg_loc += S;
+            Sb_avg_loc += Sb;
+            Sb_S_avg_loc += Sb*S.transpose();
+            Sb_Sb_avg_loc += Sb*Sb.transpose();
+        }
+
+        MPI_Allreduce(S_avg_loc.data(), S_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(Sb_avg_loc.data(), Sb_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(Sb_S_avg_loc.data(), Sb_S_avg.data(), 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(Sb_Sb_avg_loc.data(), Sb_Sb_avg.data(), 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        
+        S_avg /= n_samples;
+        Sb_avg /= n_samples;
+        Sb_S_avg /= n_samples;
+        Sb_Sb_avg /= n_samples;
+        
+        dSb_dK = Sb_S_avg-Sb_avg*S_avg.transpose();
+        dSb_dKb = Sb_Sb_avg-Sb_avg*Sb_avg.transpose();
+        T = dSb_dK * dSb_dKb.transpose();
+        EigenSolver<mat2D> solver(T);
+        
+        std::cout << solver.eigenvalues() << std::endl;
+        
+        
+        if(n < n_transformations-1){
+            pIsing = pIsingb;
+            pIsingb = pIsing->block_spin_transformation(b_);
+        }
+    }
+    
+    return 0.0;
 }
 
 
@@ -49,10 +112,6 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
                                                             vec2D K0){
     FILE* fptr = NULL;
     if(rank_ == 0){
-        
-        // print starting point
-        print_bold("* Locating critical point Kc starting from K0 = ");
-        print_vec2D(K0);
         
         // open file
 
@@ -99,7 +158,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
                                                             vec2D K){
     
     int S0 = L0/b_;
-    int n_transformations = floor(log(S0)/log(b_))-2;
+    int n_transformations = floor(log(S0)/log(b_))-1;
     int n_samples_loc = split_samples(n_samples);
     int n_samples_eq = 1E5;
 
@@ -125,6 +184,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
     vec2D SL0_avg_loc, SS0_avg_loc, SL_avg_loc, SS_avg_loc;
     mat2D SL_SL0_avg, SS_SS0_avg;
     mat2D SL_SL0_avg_loc, SS_SS0_avg_loc;
+    mat2D dSL_dK, dSS_dK;
     
     for(int n = 0; n < n_transformations; ++n){
     
@@ -173,9 +233,9 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
         SL_SL0_avg /= n_samples;
         SS_SS0_avg /= n_samples;
         
-        mat2D dSL_dK = SL_SL0_avg-SL_avg*SL0_avg.transpose();
-        mat2D dSS_dK = SS_SS0_avg-SS_avg*SS0_avg.transpose();
-        vec2D dK = (dSL_dK-dSS_dK).inverse() * (SL_avg-SS_avg);
+        dSL_dK = SL_SL0_avg-SL_avg*SL0_avg.transpose();
+        dSS_dK = SS_SS0_avg-SS_avg*SS0_avg.transpose();
+        dK = (dSL_dK-dSS_dK).inverse() * (SL_avg-SS_avg);
         Kc = K-dK;
         
         if(rank_ == 0){
