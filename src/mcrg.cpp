@@ -40,6 +40,7 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
     
     // equilibrate initial system at critical coupling
     Ising2D* pIsing = new Ising2D(N0, Kc);
+    printf("%i equilibrating...\n", rank_);
     pIsing->equilibrate(n_samples_eq, false);
     printf("%i equilibrated\n", rank_);
     
