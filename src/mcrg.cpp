@@ -36,7 +36,7 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
     
     int n_samples_eq = 1E4;
     int n_samples_loc = split_samples(n_samples);
-    int n_transformations = floor(log(N0)/log(b_));
+    int n_transformations = floor(log(N0)/log(b_))-1;
     
     // equilibrate initial system at critical coupling
     Ising2D* pIsing = new Ising2D(N0, Kc);
@@ -98,7 +98,7 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
         printf("%i done sampling \n", rank_);
         dSb_dK = Sb_S_avg-Sb_avg*S_avg.transpose();
         dSb_dKb = Sb_Sb_avg-Sb_avg*Sb_avg.transpose();
-        T = dSb_dKb.inverse() * dSb_dK;
+        T = dSb_dK * dSb_dKb.inverse();
         EigenSolver<mat2D> solver(T);
         
         printf("%i eigenvalues: \n", rank_);
