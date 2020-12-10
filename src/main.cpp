@@ -14,7 +14,7 @@ int main(){
     MonteCarloRenormalizationGroup MCRG(b);
     //double nu = MCRG.calc_critical_exponent(1E6, 32, Kc);
     
-    vec2D Kc_approx = MCRG.approx_critical_point(1E7, 128, Kc);
+    vec2D Kc_approx = MCRG.approx_critical_point(1E6, 256, Kc);
     
     MPI_Finalize();
     return 0;
