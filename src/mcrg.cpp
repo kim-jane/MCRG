@@ -34,19 +34,16 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
         fprintf(fptr, "# %23s  %25s\n", "Blocking Level n", "Critical Exponent nu");
     }
     
-    int n_samples_eq = 1E4;
+    int n_samples_eq = 1E5;
     int n_samples_loc = split_samples(n_samples);
     int n_transformations = floor(log(N0)/log(b_))-1;
     
     // equilibrate initial system at critical coupling
     Ising2D* pIsing = new Ising2D(N0, Kc);
-    printf("%i equilibrating...\n", rank_);
     pIsing->equilibrate(n_samples_eq, false);
-    printf("%i equilibrated\n", rank_);
     
     // apply one RG transformation
     Ising2D* pIsingb = pIsing->block_spin_transformation(b_);
-    printf("%i RGT\n", rank_);
     
     vec2D S, Sb;
     vec2D S_avg, Sb_avg;
@@ -59,14 +56,10 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
     // calculate correlation functions
     for(int n = 0; n < n_transformations; ++n){
         
-        printf("%i n = %i\n", rank_, n);
-        
         S_avg_loc.setZero();
         Sb_avg_loc.setZero();
         Sb_S_avg_loc.setZero();
         Sb_Sb_avg_loc.setZero();
-        
-        printf("%i sampling\n", rank_);
         
         for(int samples = 0; samples < n_samples_loc; ++samples){
             
@@ -95,13 +88,11 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
         Sb_S_avg /= n_samples;
         Sb_Sb_avg /= n_samples;
         
-        printf("%i done sampling \n", rank_);
         dSb_dK = Sb_S_avg-Sb_avg*S_avg.transpose();
         dSb_dKb = Sb_Sb_avg-Sb_avg*Sb_avg.transpose();
-        T = dSb_dK * dSb_dKb.inverse();
+        T = dSb_dKb.inverse()* dSb_dK;
         EigenSolver<mat2D> solver(T);
         
-        printf("%i eigenvalues: \n", rank_);
         std::cout << solver.eigenvalues() << std::endl;
         
         
