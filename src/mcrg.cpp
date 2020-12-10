@@ -36,7 +36,7 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
     
     int n_samples_eq = 1E4;
     int n_samples_loc = split_samples(n_samples);
-    int n_transformations = floor(log(N0)/log(b_))-2;
+    int n_transformations = floor(log(N0)/log(b_));
     
     // equilibrate initial system at critical coupling
     Ising2D* pIsing = new Ising2D(N0, Kc);
