@@ -212,10 +212,6 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
             printf("Kc = ");
             print_vec2D(Kc);
         }
-        if(n < n_transformations-1){
-            pIsingL = pIsingL->block_spin_transformation(b_);
-            pIsingS = pIsingS->block_spin_transformation(b_);
-        }
     }
 
     if(rank_ == 0){
