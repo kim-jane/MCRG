@@ -8,9 +8,14 @@ public:
     TestIsing2D(){}
     ~TestIsing2D(){}
     
-    void equilibrate_sweepK1(int n_samples,
-                             int N,
-                             double k0,
-                             double kf,
-                             double dk);
+    void equilibrate_sweepT(int n_samples,
+                            int N,
+                            double T0,
+                            double Tf,
+                            double dT);
+    
+    void check_block_spin_transformation(int n_samples_eq,
+                                         int b,
+                                         int N,
+                                         vec2D K);
 };

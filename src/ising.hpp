@@ -5,17 +5,15 @@
 class Ising2D{
 public:
     
-    unsigned n_spins_;
-    unsigned N_;
+    int N_;
+    int n_spins_;
+    int a_;
     vec K_;
     imat spins_;
-    int rank_;
-    int n_processes_;
-    int a_;
-    
+
     std::uniform_int_distribution<int> rand_spin_index_;
     
-    Ising2D(unsigned N, vec2D K);
+    Ising2D(int N, vec2D K);
     ~Ising2D(){}
     
     void sample_spins();
@@ -28,6 +26,9 @@ public:
     void display_spins();
     
 private:
+    
+    int rank_;
+    int n_processes_;
     
     void initialize_spins();
     double calc_probability_flip(int i, int j);

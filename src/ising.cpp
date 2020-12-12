@@ -1,6 +1,6 @@
 #include "ising.hpp"
 
-Ising2D::Ising2D(unsigned N,
+Ising2D::Ising2D(int N,
                  vec2D K){
     
     MPI_Comm_size(MPI_COMM_WORLD, &n_processes_);
@@ -13,20 +13,26 @@ Ising2D::Ising2D(unsigned N,
     rand_spin_index_ = std::uniform_int_distribution<int>(0,N_-1);
 }
 
-void Ising2D::equilibrate(int n_samples, bool write){
+void Ising2D::equilibrate(int n_samples_eq, bool write){
 
     FILE* fptr = NULL;
-    if(write && rank_ == 0){
-        std::string filename = "equilibrate_N_"+std::to_string(N_)
-                               +"_K1_"+get_rounded_str(K_(0))
-                               +"_K2_"+get_rounded_str(K_(1))
-                               +".txt";
+    if(rank_ == 0){
+        
+        printf("Equilibrating N = %i lattice at K = ", N_);
+        print_vec2D(K_);
+        
+        if(write){
+            std::string filename = "equilibrate_N_"+std::to_string(N_)
+                                   +"_K1_"+get_rounded_str(K_(0))
+                                   +"_K2_"+get_rounded_str(K_(1))
+                                   +".txt";
 
-        fptr = fopen(filename.c_str(), "w");
-        fprintf(fptr, "# Using %i parallel processes\n", n_processes_);
-        fprintf(fptr, "# %s, %s, %s, %s, %s, %s, %s\n",
-                "Iteration", "Avg E/spin", "Stddev E/spin", "Heat Capacity",
-                "Avg |M|/spin", "Stddev |M|/spin", "Susceptibility");
+            fptr = fopen(filename.c_str(), "w");
+            fprintf(fptr, "# Using %i parallel processes\n", n_processes_);
+            fprintf(fptr, "# %s, %s, %s, %s, %s, %s, %s\n",
+                    "Iteration", "Avg E/spin", "Stddev E/spin", "Heat Capacity",
+                    "Avg |M|/spin", "Stddev |M|/spin", "Susceptibility");
+        }
     }
 
     initialize_spins();
@@ -35,7 +41,7 @@ void Ising2D::equilibrate(int n_samples, bool write){
     double E_sigma, M_sigma;
     double C, Chi;
     
-    for(int n = 0; n <= n_samples; ++n){
+    for(int n = 0; n <= n_samples_eq; ++n){
 
         sample_spins();
         E = calc_energy();
@@ -125,7 +131,7 @@ void Ising2D::sample_spins(){
     
     int i, j;
     double P;
-    
+
     for(int n = 0; n < n_spins_; ++n){
         
         i = rand_spin_index_(rng);
@@ -137,6 +143,7 @@ void Ising2D::sample_spins(){
         }
     }
 }
+
 
 double Ising2D::calc_probability_flip(int i, int j){
     
@@ -169,15 +176,15 @@ void Ising2D::initialize_spins(){
 imat Ising2D::nearest_neighbors(int i, int j){
     
     imat nn(4,2);
-    
-    nn(0,0) = (i+1)%N_;
+
+    nn(0,0) = ((i+1)%N_+N_)%N_;
     nn(0,1) = j;
-    nn(1,0) = (i-1)%N_;
+    nn(1,0) = ((i-1)%N_+N_)%N_;
     nn(1,1) = j;
     nn(2,0) = i;
-    nn(2,1) = (j+1)%N_;
+    nn(2,1) = ((j+1)%N_+N_)%N_;
     nn(3,0) = i;
-    nn(3,1) = (j-1)%N_;
+    nn(3,1) = ((j-1)%N_+N_)%N_;
     
     return nn;
 }
@@ -187,14 +194,14 @@ imat Ising2D::next_nearest_neighbors(int i, int j){
     
     imat nnn(4,2);
     
-    nnn(0,0) = (i+1)%N_;
-    nnn(0,1) = (j+1)%N_;
-    nnn(1,0) = (i-1)%N_;
-    nnn(1,1) = (j+1)%N_;
-    nnn(2,0) = (i+1)%N_;
-    nnn(2,1) = (j-1)%N_;
-    nnn(3,0) = (i-1)%N_;
-    nnn(3,1) = (j-1)%N_;
+    nnn(0,0) = ((i+1)%N_+N_)%N_;
+    nnn(0,1) = ((j+1)%N_+N_)%N_;
+    nnn(1,0) = ((i-1)%N_+N_)%N_;
+    nnn(1,1) = ((j+1)%N_+N_)%N_;
+    nnn(2,0) = ((i+1)%N_+N_)%N_;
+    nnn(2,1) = ((j-1)%N_+N_)%N_;
+    nnn(3,0) = ((i-1)%N_+N_)%N_;
+    nnn(3,1) = ((j-1)%N_+N_)%N_;
     
     return nnn;
 }
@@ -248,17 +255,18 @@ Ising2D* Ising2D::block_spin_transformation(int b){
 
 void Ising2D::display_spins(){
     
-    for(int i = 0; i < N_; ++i){
-        for(int j = 0; j < N_; ++j){
-            if(spins_(i,j) == 1){
-                display_spin_up();
+    if(rank_ == 0){
+        for(int i = 0; i < N_; ++i){
+            for(int j = 0; j < N_; ++j){
+                if(spins_(i,j) == 1){
+                    display_spin_up();
+                }
+                else{
+                    display_spin_down();
+                }
             }
-            else{
-                display_spin_down();
-            }
+            printf("\n");
         }
-        printf("\n");
+        printf("(Lattice spacing = %i)\n\n", a_);
     }
-    printf("Number of spins = %i\n", N_*N_);
-    printf("Lattice spacing = %i\n", a_);
 }
