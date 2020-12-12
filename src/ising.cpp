@@ -18,7 +18,7 @@ void Ising2D::equilibrate(int n_samples_eq, bool write){
     FILE* fptr = NULL;
     if(rank_ == 0){
         
-        printf("Equilibrating N = %i lattice at K = ", N_);
+        printf("Equilibrating %i N = %i lattice(s) at K = ", n_processes_, N_);
         print_vec2D(K_);
         
         if(write){

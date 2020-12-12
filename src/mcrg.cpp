@@ -205,25 +205,22 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
         dSL_dK = SL_SL0_avg-SL_avg*SL0_avg.transpose();
         dSS_dK = SS_SS0_avg-SS_avg*SS0_avg.transpose();
         dK = (dSL_dK-dSS_dK).inverse() * (SL_avg-SS_avg);
-        Kc = K-dK;
+        K = K-dK;
         
         if(rank_ == 0){
             
             printf("Kc = ");
-            print_vec2D(Kc);
+            print_vec2D(K);
+            
+            fprintf(fptr, "%15i, %15.10lf, %15.10lf,\n", n_iterations, K(0), K(1));
+            fclose(fptr);
+            
+            print_bold("* Critical point: Kc = ");
+            print_vec2D(K);
+            
+            print_bold("* Critical temperature: Tc = ");
+            printf("%.5lf\n", -1.0/K(0));
         }
-    }
-
-    if(rank_ == 0){
-        
-        fprintf(fptr, "%15i, %15.10lf, %15.10lf,\n", n_iterations, K(0), K(1));
-        fclose(fptr);
-        
-        print_bold("* Critical point: Kc = ");
-        print_vec2D(K);
-        
-        print_bold("* Critical temperature: Tc = ");
-        printf("%.5lf\n", -1.0/K(0));
     }
 
     return K;
