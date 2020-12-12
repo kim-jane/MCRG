@@ -205,6 +205,7 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
         dSS_dK = SS_SS0_avg-SS_avg*SS0_avg.transpose();
         dK = (dSL_dK-dSS_dK).inverse() * (SL_avg-SS_avg);
         K = K-dK;
+        K(1) = 0.0;
         
         printf("rank %i\n", rank_);
         print_vec2D(K);
