@@ -120,12 +120,10 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
     
     // get new estimate of critical point
     int S0 = L0/b_;
-    int n_transformations = floor(log(S0)/log(b_))-1;
     int n_samples_loc = split_samples(n_samples);
-    int n_samples_eq = 5E4;
+    int n_samples_eq = 1E4;
     vec2D K = K0;
     
-    //
     for(int i = 1; i <= n_iterations; ++i){
         
         if(rank_ == 0){
