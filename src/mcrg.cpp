@@ -30,7 +30,7 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
                                +"_K2_"+get_rounded_str(Kc(1))
                                +"_s_"+std::to_string(n_samples)+".txt";
         fptr = fopen(filename.c_str(), "w");
-        //fprintf(fptr, "# %23s  %25s\n", "Blocking Level n", "Critical Exponent nu");
+        fprintf(fptr, "# %23s  %25s\n", "Blocking Level n", "Critical Exponent nu");
     }
     
     int n_samples_eq = 1E5;
