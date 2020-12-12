@@ -124,6 +124,14 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
     int n_samples_eq = 1E4;
     vec2D K = K0;
     
+    vec2D dK;
+    vec2D SL0, SS0, SL, SS;
+    vec2D SL0_avg, SS0_avg, SL_avg, SS_avg;
+    vec2D SL0_avg_loc, SS0_avg_loc, SL_avg_loc, SS_avg_loc;
+    mat2D SL_SL0_avg, SS_SS0_avg;
+    mat2D SL_SL0_avg_loc, SS_SS0_avg_loc;
+    mat2D dSL_dK, dSS_dK;
+    
     for(int i = 1; i <= n_iterations; ++i){
         
         if(rank_ == 0){
@@ -147,15 +155,6 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
         
         // transformed small lattice at n = 0
         Ising2D* pIsingS = pIsingS0;
-        
-        vec2D Kc, dK;
-        vec2D SL0, SS0, SL, SS;
-        vec2D SL0_avg, SS0_avg, SL_avg, SS_avg;
-        vec2D SL0_avg_loc, SS0_avg_loc, SL_avg_loc, SS_avg_loc;
-        mat2D SL_SL0_avg, SS_SS0_avg;
-        mat2D SL_SL0_avg_loc, SS_SS0_avg_loc;
-        mat2D dSL_dK, dSS_dK;
-
         
         // calculate correlation functions
         SL0_avg_loc.setZero();
