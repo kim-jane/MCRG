@@ -351,6 +351,6 @@ void Ising2D::display_spins(){
             }
             printf("\n");
         }
-        printf("(Lattice spacing = %i)\n\n", a_);
+        printf("(Lattice spacing = %ia)\n\n", a_);
     }
 }
