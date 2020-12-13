@@ -153,7 +153,7 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
     vec2D K = K0;
     for(int i = 1; i <= n_iterations; ++i){
         
-        K(1) = 0.0;
+        //K(1) = 0.0;
         
         if(rank_ == 0){
             printf("\nIteration %i: Kc = ", i);
