@@ -37,7 +37,6 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
     // equilibrate initial system at critical coupling
     Ising2D* pIsing = new Ising2D(N0, Kc);
     pIsing->equilibrate(n_samples_eq);
-    if(rank_ == 0) pIsing->display_spins();
     
     // apply one RG transformation
     Ising2D* pIsingb = pIsing->block_spin_transformation(b_);
@@ -87,12 +86,11 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
     dSb_dK = Sb_S_avg-Sb_avg*S_avg.transpose();
     dSb_dKb = Sb_Sb_avg-Sb_avg*Sb_avg.transpose();
     T = dSb_dKb.inverse() * dSb_dK;
+    
     EigenSolver<mat2D> solver(T);
-    
-    std::cout << solver.eigenvalues() << std::endl;
+    std::complex<double> lambda = solver.eigenvalues()(0);
 
-    
-    return 0.0;
+    return log(lambda.real())/log(b_);
 }
 
 

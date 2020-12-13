@@ -77,7 +77,7 @@ void Ising2D::equilibrate(int n_samples_eq){
     }
     
     if(rank_ == 0) {
-        //display_spins();
+        display_spins();
         fclose(fptr);
     }
 }
@@ -126,7 +126,7 @@ Ising2D* Ising2D::block_spin_transformation(int b){
     Ising2D* pIsing = new Ising2D(Nb, K_);
     pIsing->spins_ = block_spins;
     pIsing->a_ = a_*b;
-    //pIsing->display_spins();
+    pIsing->display_spins();
 
     return pIsing;
 }
