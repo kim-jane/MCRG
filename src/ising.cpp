@@ -231,7 +231,7 @@ bool Ising2D::grow_cluster(){
             nnn = next_nearest_neighbors(i, j);
             for(int l = 0; l < 4; ++l){
                 
-                // if spin matches 
+                // if spin matches
                 if(spins_(i,j) == spins_(nn(l,0), nn(l,1))){
                     
                     // neighbor spin index
@@ -258,7 +258,7 @@ bool Ising2D::grow_cluster(){
                     if(!cluster_contains(n)){
                         
                         // add neighbor to cluster with probability P1
-                        if(rand_unif() < P12){
+                        if(rand_unif() < P2){
                             cluster_.push_back(n);
                             cluster_grew = true;
                         }
