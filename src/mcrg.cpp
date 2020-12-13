@@ -108,6 +108,9 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
                                                             vec2D K0){
     FILE* fptr = NULL;
     if(rank_ == 0){
+        
+        print_bold("* Locating critical point starting from K0 = ");
+        print_vec2D(K0);
     
         // open file
         std::string filename = "critical_point_L_"+std::to_string(L)
@@ -159,7 +162,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
                                                             vec2D K){
     
     int n_samples_loc = split_samples(n_samples);
-    int n_samples_eq = 1E5;
+    int n_samples_eq = 2E5;
     
     // equilibrate initial large lattice
     Ising2D* pIsingL;
@@ -224,6 +227,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
     mat2D dSS_dK = SS_SS_avg - SS_avg * SS_avg.transpose();
     vec2D dK = (dSL_dK-dSS_dK).inverse() * (SL_avg-SS_avg);
     vec Kc = K-dK;
+    if(rank_ == 0) print_vec2D(Kc);
     
     return Kc;
 }
