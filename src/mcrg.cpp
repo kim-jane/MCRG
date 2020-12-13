@@ -162,23 +162,20 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
                                                             vec2D K){
     
     int n_samples_loc = split_samples(n_samples);
-    int n_samples_eq = 2E5;
+    int n_samples_eq = 1E6;
     
     // equilibrate initial large lattice
     Ising2D* pIsingL;
     pIsingL = new Ising2D(L, K);
     pIsingL->equilibrate(n_samples_eq, true);
-    if(rank_ == 0) pIsingL->display_spins();
     
     // apply 1 transformation to large lattice
     Ising2D* pIsingLb = pIsingL->block_spin_transformation(b_);
-    if(rank_ == 0) pIsingLb->display_spins();
     
     // equilibrate small lattice with the same number of
     // lattice sites as transformed large lattice
     Ising2D* pIsingS = new Ising2D(L/b_, K);
     pIsingS->equilibrate(n_samples_eq, true);
-    if(rank_ == 0) pIsingS->display_spins();
     
     // containers
     vec2D SL, SL_avg, SL_avg_loc;
@@ -230,7 +227,11 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
     mat2D dSS_dK = SS_SS_avg - SS_avg * SS_avg.transpose();
     vec2D dK = (dSL_dK-dSS_dK).inverse() * (SLb_avg-SS_avg);
     vec Kc = K-dK;
-    if(rank_ == 0) print_vec2D(Kc);
+    
+    if(rank_ == 0){
+        printf("Approximate Kc = ");
+        print_vec2D(Kc);
+    }
     
     return Kc;
 }

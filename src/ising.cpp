@@ -74,7 +74,10 @@ void Ising2D::equilibrate(int n_samples_eq, bool write){
         }
     }
     
-    if(write && rank_ == 0) fclose(fptr);
+    if(rank_ == 0) {
+        display_spins();
+        if(write) fclose(fptr);
+    }
 }
 
 
@@ -208,11 +211,14 @@ imat Ising2D::next_nearest_neighbors(int i, int j){
 
 Ising2D* Ising2D::block_spin_transformation(int b){
     
-    if(N_%b != 0){
-        if(rank_ == 0){
+    if(rank_ == 0){
+        if(N_%b_ != 0){
             print_error("Lattice size is not divisible by the scaling factor.\n");
+            exit(1);
         }
-        exit(1);
+        else{
+            printf("Block spin transformation N = %i --> %i", N_, N_/b);
+        }
     }
     
     int Nb = N_/b;
@@ -247,6 +253,7 @@ Ising2D* Ising2D::block_spin_transformation(int b){
     Ising2D* pIsing = new Ising2D(Nb, K_);
     pIsing->spins_ = block_spins;
     pIsing->a_ = a_*b;
+    pIsing->display_spins();
 
     return pIsing;
 }
