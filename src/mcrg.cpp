@@ -18,79 +18,114 @@ MonteCarloRenormalizationGroup::MonteCarloRenormalizationGroup(int b){
     }
 }
 
-double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
-                                                              int n_samples,
-                                                              int N0,
-                                                              vec2D Kc){
+void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_iterations,
+                                                            int n_samples_eq,
+                                                            int n_samples,
+                                                            int N0,
+                                                            vec2D Kc){
     // open file
     FILE* fptr = NULL;
     if(rank_ == 0){
+        
+        print_bold("* Calculating critical point at Kc = ");
+        print_vec2D(Kc);
+        
+        
         std::string filename = "critical_exponent_N_"+std::to_string(N0)
                                +"_K1_"+get_rounded_str(Kc(0))
                                +"_K2_"+get_rounded_str(Kc(1))+".txt";
         fptr = fopen(filename.c_str(), "w");
-        fprintf(fptr, "# %23s  %25s\n", "Blocking Level n", "Critical Exponent nu");
+        fprintf(fptr, "# %23s  %25s\n", "Iteration", "Critical Exponent nu");
     }
     
     int n_samples_loc = split_samples(n_samples);
+    double nu_avg = 0.0;
+    double nu2_avg = 0.0;
+    double nu, nu_sigma;
+    double lambda1, lambda2;
     
-    // equilibrate initial system at critical coupling
-    Ising2D* pIsing = new Ising2D(N0, Kc);
-    pIsing->equilibrate(n_samples_eq);
-    
-    // apply one RG transformation
-    Ising2D* pIsingb = pIsing->block_spin_transformation(b_);
-    
-    // containers
-    vec2D S, Sb;
-    vec2D S_avg, Sb_avg;
-    vec2D S_avg_loc, Sb_avg_loc;
-    mat2D Sb_S_avg, Sb_Sb_avg;
-    mat2D Sb_S_avg_loc, Sb_Sb_avg_loc;
-    mat2D dSb_dK, dSb_dKb;
-    mat2D T;
-    
-    // calculate correlation functions
-    S_avg_loc.setZero();
-    Sb_avg_loc.setZero();
-    Sb_S_avg_loc.setZero();
-    Sb_Sb_avg_loc.setZero();
-    
-    for(int samples = 0; samples < n_samples_loc; ++samples){
+    for(int n = 1; n <= n_iterations; ++n){
         
-        // get new samples
-        pIsing->sample_spins();
-        pIsingb->sample_spins();
+        // equilibrate initial system at critical coupling
+        Ising2D* pIsing = new Ising2D(N0, Kc);
+        pIsing->equilibrate(n_samples_eq);
         
-        // calculate spin interactions for each lattice
-        S = pIsing->calc_spin_interactions();
-        Sb = pIsingb->calc_spin_interactions();
+        // apply one RG transformation
+        Ising2D* pIsingb = pIsing->block_spin_transformation(b_);
         
-        // add up values for averages
-        S_avg_loc += S;
-        Sb_avg_loc += Sb;
-        Sb_S_avg_loc += Sb*S.transpose();
-        Sb_Sb_avg_loc += Sb*Sb.transpose();
+        // containers
+        vec2D S, Sb;
+        vec2D S_avg, Sb_avg;
+        vec2D S_avg_loc, Sb_avg_loc;
+        mat2D Sb_S_avg, Sb_Sb_avg;
+        mat2D Sb_S_avg_loc, Sb_Sb_avg_loc;
+        mat2D dSb_dK, dSb_dKb;
+        mat2D T;
+        
+        // calculate correlation functions
+        S_avg_loc.setZero();
+        Sb_avg_loc.setZero();
+        Sb_S_avg_loc.setZero();
+        Sb_Sb_avg_loc.setZero();
+        
+        if(rank_ == 0) printf("Sampling...\n");
+        for(int samples = 0; samples < n_samples_loc; ++samples){
+            
+            // get new samples
+            pIsing->sample_spins();
+            pIsingb->sample_spins();
+            
+            // calculate spin interactions for each lattice
+            S = pIsing->calc_spin_interactions();
+            Sb = pIsingb->calc_spin_interactions();
+            
+            // add up values for averages
+            S_avg_loc += S;
+            Sb_avg_loc += Sb;
+            Sb_S_avg_loc += Sb*S.transpose();
+            Sb_Sb_avg_loc += Sb*Sb.transpose();
+        }
+
+        MPI_Allreduce(S_avg_loc.data(), S_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(Sb_avg_loc.data(), Sb_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(Sb_S_avg_loc.data(), Sb_S_avg.data(), 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(Sb_Sb_avg_loc.data(), Sb_Sb_avg.data(), 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        
+        S_avg /= n_samples;
+        Sb_avg /= n_samples;
+        Sb_S_avg /= n_samples;
+        Sb_Sb_avg /= n_samples;
+        
+        dSb_dK = Sb_S_avg-Sb_avg*S_avg.transpose();
+        dSb_dKb = Sb_Sb_avg-Sb_avg*Sb_avg.transpose();
+        T = dSb_dKb.inverse() * dSb_dK;
+        
+        EigenSolver<mat2D> solver(T);
+        lambda1 = solver.eigenvalues()(0).real();
+        lambda2 = solver.eigenvalues()(1).real();
+        
+        if(lambda1 > lambda2){
+            nu = log(lambda1)/log(b_);
+        }
+        else{
+            nu = log(lambda2)/log(b_);
+        }
+        nu_avg += nu;
+        nu2_avg += nu*nu;
+        
+        if(rank_ == 0) fprintf(fptr, "%25i, %25.10lf,\n", n, nu);
     }
-
-    MPI_Allreduce(S_avg_loc.data(), S_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Allreduce(Sb_avg_loc.data(), Sb_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Allreduce(Sb_S_avg_loc.data(), Sb_S_avg.data(), 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Allreduce(Sb_Sb_avg_loc.data(), Sb_Sb_avg.data(), 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     
-    S_avg /= n_samples;
-    Sb_avg /= n_samples;
-    Sb_S_avg /= n_samples;
-    Sb_Sb_avg /= n_samples;
-    
-    dSb_dK = Sb_S_avg-Sb_avg*S_avg.transpose();
-    dSb_dKb = Sb_Sb_avg-Sb_avg*Sb_avg.transpose();
-    T = dSb_dKb.inverse() * dSb_dK;
-    
-    EigenSolver<mat2D> solver(T);
-    std::complex<double> lambda = solver.eigenvalues()(0);
-
-    return log(lambda.real())/log(b_);
+    if(rank_ == 0){
+        
+        nu_avg /= n_iterations;
+        nu2_avg /= n_iterations;
+        nu_sigma = sqrt(nu2_avg - nu_avg*nu_avg);
+        
+        fprintf(fptr, "# Average nu = %.10lf\n", nu_avg);
+        fprintf(fptr, "# Stddev nu = %.10lf\n", nu_sigma);
+        fclose(fptr);
+    }
 }
 
 

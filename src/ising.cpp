@@ -178,7 +178,7 @@ vec2D Ising2D::calc_spin_interactions(){
         }
     }
     
-    return S;
+    return S/4.0;
 }
 
 bool Ising2D::cluster_contains(int k){

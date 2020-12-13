@@ -1,5 +1,4 @@
 #pragma once
-#include <complex>
 #include "ising.hpp"
 
 class MonteCarloRenormalizationGroup{
@@ -14,10 +13,11 @@ public:
     int rank_;
     int n_processes_;
     
-    double calc_critical_exponent(int n_samples_eq,
-                                  int n_samples,
-                                  int N,
-                                  vec2D Kc);
+    void calc_critical_exponent(int n_iterations,
+                                int n_samples_eq,
+                                int n_samples,
+                                int N,
+                                vec2D Kc);
 
     vec2D locate_critical_point(int n_iterations,
                                 int n_samples_eq,
