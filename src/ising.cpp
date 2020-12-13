@@ -284,8 +284,6 @@ void Ising2D::initialize_spins(){
             spins_(i,j) = rand_spin();
         }
     }
-    
-    if(rank_ == 0) display_spins();
 }
 
 
