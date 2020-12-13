@@ -8,7 +8,7 @@ int main(){
     
     int b = 2;
     vec2D Kc;
-    Kc(0) = -0.44068679;
+    Kc(0) = -0.43;
     Kc(1) = 0.0;
 
     /*
@@ -20,8 +20,8 @@ int main(){
     
     MonteCarloRenormalizationGroup MCRG(b);
     
-    //Kc = MCRG.locate_critical_point(100, 1E4, 1E6, 64, Kc);
-    MCRG.calc_critical_exponent(10, 1E4, 1E6, 64, Kc);
+    Kc = MCRG.locate_critical_point(100, 1E4, 1E6, 64, Kc);
+    MCRG.calc_critical_exponent(10, 1E5, 1E6, 64, Kc);
     
     MPI_Finalize();
     return 0;
