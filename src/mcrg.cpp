@@ -42,9 +42,13 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_iterations,
     double nu_avg = 0.0;
     double nu2_avg = 0.0;
     double nu, nu_sigma;
-    double lambda1, lambda2;
+    double lambda;
     
-    for(int n = 1; n <= n_iterations; ++n){
+    for(int i = 1; i <= n_iterations; ++i){
+        
+        if(rank_ == 0){
+            printf("\nIteration %i: \n", i);
+        }
         
         // equilibrate initial system at critical coupling
         Ising2D* pIsing = new Ising2D(N0, Kc);
@@ -101,15 +105,9 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_iterations,
         T = dSb_dKb.inverse() * dSb_dK;
         
         EigenSolver<mat2D> solver(T);
-        lambda1 = solver.eigenvalues()(0).real();
-        lambda2 = solver.eigenvalues()(1).real();
+        lambda = max(solver.eigenvalues()(0).real(), solver.eigenvalues()(1).real());
         
-        if(lambda1 > lambda2){
-            nu = log(lambda1)/log(b_);
-        }
-        else{
-            nu = log(lambda2)/log(b_);
-        }
+        nu = log(lambda)/log(b_);
         nu_avg += nu;
         nu2_avg += nu*nu;
         
@@ -157,7 +155,6 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
         
         if(rank_ == 0){
             printf("\nIteration %i: Kc = ", i);
-            print_vec2D(K);
             fprintf(fptr, "%15i, %15.10lf, %15.10lf, ", i, K(0), K(1));
         }
 
