@@ -211,7 +211,6 @@ Ising2D* Ising2D::block_spin_transformation(int b){
     if(N_%b != 0){
         if(rank_ == 0){
             print_error("Lattice size is not divisible by the scaling factor.\n");
-            
         }
         exit(1);
     }

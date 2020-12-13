@@ -104,118 +104,41 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
 
 vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
                                                             int n_samples,
-                                                            int L0,
+                                                            int L,
                                                             vec2D K0){
     FILE* fptr = NULL;
     if(rank_ == 0){
     
         // open file
-        std::string filename = "critical_point_L_"+std::to_string(L0)
+        std::string filename = "critical_point_L_"+std::to_string(L)
                                +"_K1_"+get_rounded_str(K0(0))
                                +"_K2_"+get_rounded_str(K0(1))
                                +"_s_"+std::to_string(n_samples)+".txt";
         fptr = fopen(filename.c_str(), "w");
-        fprintf(fptr, "# %13s  %15s  %15s\n", "Iteration", "K1", "K2");
+        fprintf(fptr, "# %13s  %15s  %15s  %15s  %15s\n", "Iteration", "K1", "K2", "K1'", "K2'");
     }
     
-    // get new estimate of critical point
-    int S0 = L0/b_;
-    int n_samples_loc = split_samples(n_samples);
-    int n_samples_eq = 1E4;
+    // iteratively approach critical point
     vec2D K = K0;
-    
-    vec2D dK;
-    vec2D SL0, SS0, SL, SS;
-    vec2D SL0_avg, SS0_avg, SL_avg, SS_avg;
-    vec2D SL0_avg_loc, SS0_avg_loc, SL_avg_loc, SS_avg_loc;
-    mat2D SL_SL0_avg, SS_SS0_avg;
-    mat2D SL_SL0_avg_loc, SS_SS0_avg_loc;
-    mat2D dSL_dK, dSS_dK;
-    
     for(int i = 1; i <= n_iterations; ++i){
         
-        if(rank_ == 0){
-            printf("\nIteration %i:\n", i);
-            fprintf(fptr, "%15i, %15.10lf, %15.10lf,\n", i, K(0), K(1));
-            fclose(fptr);
-        }
-
-        // equilibrate initial large lattice
-        Ising2D* pIsingL0;
-        pIsingL0 = new Ising2D(L0, K);
-        pIsingL0->equilibrate(n_samples_eq, false);
-        
-        // apply 1 transformation to large lattice
-        Ising2D* pIsingL = pIsingL0->block_spin_transformation(b_);
-        
-        // equilibrate small lattice with the same number of
-        // lattice sites as transformed large lattice
-        Ising2D* pIsingS0 = new Ising2D(S0, K);
-        pIsingS0->equilibrate(n_samples_eq, false);
-        
-        // transformed small lattice at n = 0
-        Ising2D* pIsingS = pIsingS0;
-        
-        // calculate correlation functions
-        SL0_avg_loc.setZero();
-        SS0_avg_loc.setZero();
-        SL_avg_loc.setZero();
-        SS_avg_loc.setZero();
-        SL_SL0_avg_loc.setZero();
-        SS_SS0_avg_loc.setZero();
-        
-        for(int samples = 0; samples < n_samples_loc; ++samples){
-            
-            // get new samples
-            pIsingL0->sample_spins();
-            pIsingS0->sample_spins();
-            pIsingL->sample_spins();
-            pIsingS->sample_spins();
-            
-            // calculate spin interactions for each lattice
-            SL0 = pIsingL0->calc_spin_interactions();
-            SS0 = pIsingS0->calc_spin_interactions();
-            SL = pIsingL->calc_spin_interactions();
-            SS = pIsingS->calc_spin_interactions();
-            
-            // add up values for averages
-            SL0_avg_loc += SL0;
-            SS0_avg_loc += SS0;
-            SL_avg_loc += SL;
-            SS_avg_loc += SS;
-            SL_SL0_avg_loc += SL*SL0.transpose();
-            SS_SS0_avg_loc += SS*SS0.transpose();
-        }
-        
-        MPI_Allreduce(SL0_avg_loc.data(), SL0_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(SS0_avg_loc.data(), SS0_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(SL_avg_loc.data(), SL_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(SS_avg_loc.data(), SS_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(SL_SL0_avg_loc.data(), SL_SL0_avg.data(), 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(SS_SS0_avg_loc.data(), SS_SS0_avg.data(), 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        
-        SL0_avg /= n_samples;
-        SS0_avg /= n_samples;
-        SL_avg /= n_samples;
-        SS_avg /= n_samples;
-        SL_SL0_avg /= n_samples;
-        SS_SS0_avg /= n_samples;
-        
-        dSL_dK = SL_SL0_avg-SL_avg*SL0_avg.transpose();
-        dSS_dK = SS_SS0_avg-SS_avg*SS0_avg.transpose();
-        dK = (dSL_dK-dSS_dK).inverse() * (SL_avg-SS_avg);
-        K = K-dK;
         K(1) = 0.0;
         
-        printf("rank %i\n", rank_);
-        print_vec2D(K);
+        if(rank_ == 0){
+            printf("\nIteration %i: Kc = ", i);
+            print_vec2D(K);
+            fprintf(fptr, "%15i, %15.10lf, %15.10lf, ", i, K(0), K(1));
+        }
 
+        K = approx_critical_point(n_samples, L, K);
+        
+        if(rank_ == 0){
+            fprintf(fptr, "%15.10lf, %15.10lf,\n", K(0), K(1));
+        }
     }
     
+    // print results
     if(rank_ == 0){
-        
-        printf("Kc = ");
-        print_vec2D(K);
         
         fprintf(fptr, "%15i, %15.10lf, %15.10lf,\n", n_iterations, K(0), K(1));
         fclose(fptr);
@@ -231,6 +154,79 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
 }
 
 
+vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
+                                                            int L,
+                                                            vec2D K){
+    
+    int n_samples_loc = split_samples(n_samples);
+    int n_samples_eq = 1E4;
+    
+    // equilibrate initial large lattice
+    Ising2D* pIsingL;
+    pIsingL = new Ising2D(L, K);
+    pIsingL->equilibrate(n_samples_eq, true);
+    
+    // apply 1 transformation to large lattice
+    Ising2D* pIsingLb = pIsingL->block_spin_transformation(b_);
+    
+    // equilibrate small lattice with the same number of
+    // lattice sites as transformed large lattice
+    Ising2D* pIsingS = new Ising2D(L/b_, K);
+    pIsingS->equilibrate(n_samples_eq, true);
+    
+    // containers
+    vec2D SL, SL_avg, SL_avg_loc;
+    vec2D SLb, SLb_avg, SLb_avg_loc;
+    vec2D SS, SS_avg, SS_avg_loc;
+    mat2D SLb_SL_avg, SLb_SL_avg_loc;
+    mat2D SS_SS_avg, SS_SS_avg_loc;
+    
+    // calculate correlation functions
+    SL_avg_loc.setZero();
+    SLb_avg_loc.setZero();
+    SS_avg_loc.setZero();
+    SLb_SL_avg_loc.setZero();
+    SS_SS_avg_loc.setZero();
+    
+    for(int samples = 0; samples < n_samples_loc; ++samples){
+        
+        // get new samples
+        pIsingL->sample_spins();
+        pIsingLb->sample_spins();
+        pIsingS->sample_spins();
+        
+        // calculate spin interactions for each lattice
+        SL = pIsingL->calc_spin_interactions();
+        SLb = pIsingLb->calc_spin_interactions();
+        SS = pIsingS->calc_spin_interactions();
+        
+        // add up values for averages
+        SL_avg_loc += SL;
+        SLb_avg_loc += SLb;
+        SS_avg_loc += SS;
+        SLb_SL_avg_loc += SLb*SL.transpose();
+        SS_SS_avg_loc += SS*SS.transpose();
+    }
+    
+    MPI_Allreduce(SL_avg_loc.data(), SL_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(SLb_avg_loc.data(), SLb_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(SS_avg_loc.data(), SS_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(SLb_SL_avg_loc.data(), SLb_SL_avg.data(), 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(SS_SS_avg_loc.data(), SS_SS_avg.data(), 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    
+    SL_avg /= n_samples;
+    SLb_avg /= n_samples;
+    SS_avg /= n_samples;
+    SLb_SL_avg /= n_samples;
+    SS_SS_avg /= n_samples;
+    
+    mat2D dSL_dK = SLb_SL_avg - SLb_avg * SL_avg.transpose();
+    mat2D dSS_dK = SS_SS_avg - SS_avg * SS_avg.transpose();
+    vec2D dK = (dSL_dK-dSS_dK).inverse() * (SL_avg-SS_avg);
+    vec Kc = K-dK;
+    
+    return Kc;
+}
 
 
 int MonteCarloRenormalizationGroup::split_samples(int n_samples){
