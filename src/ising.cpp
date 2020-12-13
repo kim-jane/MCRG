@@ -203,13 +203,15 @@ bool Ising2D::grow_cluster(){
     
     bool cluster_grew = false;
     int n_cluster = cluster_.size();
-    double P = 1-exp(2*K_(0));
-    imat nn;
+    int i, j, k, n;
+    double P1 = 1-exp(2*K_(0));
+    double P2 = 1-exp(2*K_(1));
+    imat nn, nnn;
 
     // if cluster is empty, add random lattice site
     if(n_cluster == 0){
         
-        int k = rand_spin_index_(rng);
+        k = rand_spin_index_(rng);
         cluster_.push_back(k);
         cluster_grew = true;
     }
@@ -220,25 +222,43 @@ bool Ising2D::grow_cluster(){
         // loop thru elements of current cluster
         for(int c = 0; c < n_cluster; ++c){
             
-            int k = cluster_[c];
-            int i = ((k%N_)+N_)%N_;
-            int j = floor((double)k/N_);
+            k = cluster_[c];
+            i = ((k%N_)+N_)%N_;
+            j = floor((double)k/N_);
             
             // look thru neighbors of element
             nn = nearest_neighbors(i, j);
+            nnn = next_nearest_neighbors(i, j);
             for(int l = 0; l < 4; ++l){
                 
-                // if spin matches
+                // if spin matches 
                 if(spins_(i,j) == spins_(nn(l,0), nn(l,1))){
                     
                     // neighbor spin index
-                    int n = nn(l,1)*N_+nn(l,0);
+                    n = nn(l,1)*N_+nn(l,0);
                     
                     // if neighbor isn't already in cluster
                     if(!cluster_contains(n)){
                         
-                        // add neighbor to cluster with probability P
-                        if(rand_unif() < P){
+                        // add neighbor to cluster with probability P1
+                        if(rand_unif() < P1){
+                            cluster_.push_back(n);
+                            cluster_grew = true;
+                        }
+                    }
+                }
+                
+                // if spin matches
+                if(spins_(i,j) == spins_(nnn(l,0), nnn(l,1))){
+                    
+                    // neighbor spin index
+                    n = nnn(l,1)*N_+nnn(l,0);
+                    
+                    // if neighbor isn't already in cluster
+                    if(!cluster_contains(n)){
+                        
+                        // add neighbor to cluster with probability P1
+                        if(rand_unif() < P12){
                             cluster_.push_back(n);
                             cluster_grew = true;
                         }
