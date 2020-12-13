@@ -228,7 +228,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
     
     mat2D dSL_dK = SLb_SL_avg - SLb_avg * SL_avg.transpose();
     mat2D dSS_dK = SS_SS_avg - SS_avg * SS_avg.transpose();
-    vec2D dK = (dSL_dK-dSS_dK).inverse() * (SL_avg-SS_avg);
+    vec2D dK = (dSL_dK-dSS_dK).inverse() * (SLb_avg-SS_avg);
     vec Kc = K-dK;
     if(rank_ == 0) print_vec2D(Kc);
     
