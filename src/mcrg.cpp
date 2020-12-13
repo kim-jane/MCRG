@@ -9,17 +9,17 @@ MonteCarloRenormalizationGroup::MonteCarloRenormalizationGroup(int b){
     
     if(rank_ == 0){
         
-        printf("\n=============================================\n");
-        printf("==========       MONTE CARLO       ==========\n");
-        printf("==========  RENORMALIZATION GROUP  ==========\n");
-        printf("=============================================\n\n");
-        
+        print_bold("\n=============================================\n");
+        print_bold("==========       MONTE CARLO       ==========\n");
+        print_bold("==========  RENORMALIZATION GROUP  ==========\n");
+        print_bold("=============================================\n\n");
         print_bold("* Using "+std::to_string(n_processes_)+" parallel process(es)\n");
         print_bold("* Scaling factor b = "+std::to_string(b_)+"\n");
     }
 }
 
-double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
+double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
+                                                              int n_samples,
                                                               int N0,
                                                               vec2D Kc){
     // open file
@@ -32,12 +32,7 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
         fprintf(fptr, "# %23s  %25s\n", "Blocking Level n", "Critical Exponent nu");
     }
     
-    int n_samples_eq = 1E4;
     int n_samples_loc = split_samples(n_samples);
-    
-    // get initial estimate of distance to fixed point dK
-    //dK = distance_critical_point
-    
     
     // equilibrate initial system at critical coupling
     Ising2D* pIsing = new Ising2D(N0, Kc);
@@ -47,6 +42,7 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
     // apply one RG transformation
     Ising2D* pIsingb = pIsing->block_spin_transformation(b_);
     
+    // containers
     vec2D S, Sb;
     vec2D S_avg, Sb_avg;
     vec2D S_avg_loc, Sb_avg_loc;

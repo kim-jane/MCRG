@@ -13,7 +13,8 @@ public:
     int rank_;
     int n_processes_;
     
-    double calc_critical_exponent(int n_samples,
+    double calc_critical_exponent(int n_samples_eq,
+                                  int n_samples,
                                   int N,
                                   vec2D Kc);
 
