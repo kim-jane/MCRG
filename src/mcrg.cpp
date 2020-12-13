@@ -105,13 +105,13 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_iterations,
         T = dSb_dKb.inverse() * dSb_dK;
         
         EigenSolver<mat2D> solver(T);
-        lambda = max(solver.eigenvalues()(0).real(), solver.eigenvalues()(1).real());
+        lambda = std::max(solver.eigenvalues()(0).real(),solver.eigenvalues()(1).real());
         
         nu = log(lambda)/log(b_);
         nu_avg += nu;
         nu2_avg += nu*nu;
         
-        if(rank_ == 0) fprintf(fptr, "%25i, %25.10lf,\n", n, nu);
+        if(rank_ == 0) fprintf(fptr, "%25i, %25.10lf,\n", i, nu);
     }
     
     if(rank_ == 0){
