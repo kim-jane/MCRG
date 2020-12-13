@@ -27,7 +27,7 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_iterations,
     FILE* fptr = NULL;
     if(rank_ == 0){
         
-        print_bold("* Calculating critical point at Kc = ");
+        print_bold("* Calculating critical exponent at Kc = ");
         print_vec2D(Kc);
         
         
