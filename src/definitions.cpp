@@ -8,12 +8,20 @@ std::uniform_real_distribution<double> unif(0.0,1.0);
 
 void display_spin_up(){
     
-    printf("\033[37m%2s\033[0m", "O");
+    printf("\033[34m%2s\033[0m", "O");
 }
 
 void display_spin_down(){
     
-    printf("\033[34m%2s\033[0m", "O");
+    printf("\033[37m%2s\033[0m", "X");
+}
+
+void display_cluster_up(){
+    printf("\033[31m%2s\033[0m", "O");
+}
+
+void display_cluster_down(){
+    printf("\033[31m%2s\033[0m", "X");
 }
 
 void print_bold(std::string message){
@@ -28,39 +36,39 @@ void print_error(std::string message){
 
 void print_vec2D(vec2D v){
     
-    printf("(%.5lf, %.5lf)\n", v(0), v(1));
+    printf("(%.10lf, %.10lf)\n", v(0), v(1));
 }
 
-bool print_iter(int i){
+bool write_iter(int i){
     
-    bool print = false;
+    bool write = false;
     
     if(i < 10){
-        print = true;
+        write = true;
     }
     else if(i < 100 && i%10 == 0){
-        print = true;
+        write = true;
     }
     else if(i < 1000 && i%100 == 0){
-        print = true;
+        write = true;
     }
     else if(i < 10000 && i%1000 == 0){
-        print = true;
+        write = true;
     }
     else if(i < 100000 && i%10000 == 0){
-        print = true;
+        write = true;
     }
     else if(i%100000 == 0){
-        print = true;
+        write = true;
     }
     
-    return print;
+    return write;
 }
 
 std::string get_rounded_str(double num){
     
     std::stringstream ss;
-    ss << std::setprecision(3) << num;
+    ss << std::setprecision(5) << num;
     std::string str = ss.str();
     
     return str;

@@ -18,11 +18,13 @@ public:
                                   vec2D Kc);
 
     vec2D locate_critical_point(int n_iterations,
+                                int n_samples_eq,
                                 int n_samples,
                                 int L,
                                 vec2D K0);
     
-    vec2D approx_critical_point(int n_samples,
+    vec2D approx_critical_point(int n_samples_eq,
+                                int n_samples,
                                 int L,
                                 vec2D K);
     

@@ -14,7 +14,7 @@ void TestIsing2D::equilibrate_sweepT(int n_samples_eq,
         K(1) = 0.0;
         
         Ising2D* pIsing = new Ising2D(N, K);
-        pIsing->equilibrate(n_samples_eq, true);
+        pIsing->equilibrate(n_samples_eq);
     }
 }
 
@@ -24,7 +24,7 @@ void TestIsing2D::check_block_spin_transformation(int n_samples_eq,
                                                   vec2D K){
     
     Ising2D* pIsing = new Ising2D(N, K);
-    pIsing->equilibrate(n_samples_eq, false);
+    pIsing->equilibrate(n_samples_eq);
     pIsing->display_spins();
     
     int n_transformations = floor(log(N)/log(b))-1;

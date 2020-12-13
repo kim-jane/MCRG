@@ -8,9 +8,9 @@ int main(){
     
     int b = 2;
     vec2D Kc;
-    Kc(0) = -0.43;
+    Kc(0) = -0.44;
     Kc(1) = 0.0;
-    
+
     /*
     TestIsing2D test;
     test.check_block_spin_transformation(1E7, b, 128, Kc);
@@ -20,7 +20,7 @@ int main(){
     
     MonteCarloRenormalizationGroup MCRG(b);
     
-    Kc = MCRG.locate_critical_point(100, 1E6, 32, Kc);
+    Kc = MCRG.locate_critical_point(100, 1E4, 1E6, 32, Kc);
     //double nu = MCRG.calc_critical_exponent(1E6, 32, Kc);
     
     MPI_Finalize();

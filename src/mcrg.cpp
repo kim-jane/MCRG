@@ -27,13 +27,12 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
     if(rank_ == 0){
         std::string filename = "critical_exponent_N_"+std::to_string(N0)
                                +"_K1_"+get_rounded_str(Kc(0))
-                               +"_K2_"+get_rounded_str(Kc(1))
-                               +"_s_"+std::to_string(n_samples)+".txt";
+                               +"_K2_"+get_rounded_str(Kc(1))+".txt";
         fptr = fopen(filename.c_str(), "w");
         fprintf(fptr, "# %23s  %25s\n", "Blocking Level n", "Critical Exponent nu");
     }
     
-    int n_samples_eq = 1E5;
+    int n_samples_eq = 1E4;
     int n_samples_loc = split_samples(n_samples);
     
     // get initial estimate of distance to fixed point dK
@@ -42,7 +41,7 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
     
     // equilibrate initial system at critical coupling
     Ising2D* pIsing = new Ising2D(N0, Kc);
-    pIsing->equilibrate(n_samples_eq, false);
+    pIsing->equilibrate(n_samples_eq);
     if(rank_ == 0) pIsing->display_spins();
     
     // apply one RG transformation
@@ -57,7 +56,6 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
     mat2D T;
     
     // calculate correlation functions
-
     S_avg_loc.setZero();
     Sb_avg_loc.setZero();
     Sb_S_avg_loc.setZero();
@@ -103,6 +101,7 @@ double MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples,
 
 
 vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
+                                                            int n_samples_eq,
                                                             int n_samples,
                                                             int L,
                                                             vec2D K0){
@@ -115,10 +114,10 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
         // open file
         std::string filename = "critical_point_L_"+std::to_string(L)
                                +"_K1_"+get_rounded_str(K0(0))
-                               +"_K2_"+get_rounded_str(K0(1))
-                               +"_s_"+std::to_string(n_samples)+".txt";
+                               +"_K2_"+get_rounded_str(K0(1))+".txt";
         fptr = fopen(filename.c_str(), "w");
-        fprintf(fptr, "# %13s  %15s  %15s  %15s  %15s\n", "Iteration", "K1", "K2", "K1'", "K2'");
+        fprintf(fptr, "# %13s  %15s  %15s  %15s  %15s\n",
+                "Iteration", "K1", "K2", "K1'", "K2'");
     }
     
     // iteratively approach critical point
@@ -133,7 +132,7 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
             fprintf(fptr, "%15i, %15.10lf, %15.10lf, ", i, K(0), K(1));
         }
 
-        K = approx_critical_point(n_samples, L, K);
+        K = approx_critical_point(n_samples_eq, n_samples, L, K);
         
         if(rank_ == 0){
             fprintf(fptr, "%15.10lf, %15.10lf,\n", K(0), K(1));
@@ -142,8 +141,7 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
     
     // print results
     if(rank_ == 0){
-        
-        fprintf(fptr, "%15i, %15.10lf, %15.10lf,\n", n_iterations, K(0), K(1));
+
         fclose(fptr);
         
         print_bold("* Critical point: Kc = ");
@@ -157,17 +155,17 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
 }
 
 
-vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
+vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
+                                                            int n_samples,
                                                             int L,
                                                             vec2D K){
     
     int n_samples_loc = split_samples(n_samples);
-    int n_samples_eq = 1E6;
     
     // equilibrate initial large lattice
     Ising2D* pIsingL;
     pIsingL = new Ising2D(L, K);
-    pIsingL->equilibrate(n_samples_eq, true);
+    pIsingL->equilibrate(n_samples_eq);
     
     // apply 1 transformation to large lattice
     Ising2D* pIsingLb = pIsingL->block_spin_transformation(b_);
@@ -175,7 +173,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
     // equilibrate small lattice with the same number of
     // lattice sites as transformed large lattice
     Ising2D* pIsingS = new Ising2D(L/b_, K);
-    pIsingS->equilibrate(n_samples_eq, true);
+    pIsingS->equilibrate(n_samples_eq);
     
     // containers
     vec2D SL, SL_avg, SL_avg_loc;
@@ -191,6 +189,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples,
     SLb_SL_avg_loc.setZero();
     SS_SS_avg_loc.setZero();
     
+    if(rank_ == 0) printf("Sampling...\n");
     for(int samples = 0; samples < n_samples_loc; ++samples){
         
         // get new samples
