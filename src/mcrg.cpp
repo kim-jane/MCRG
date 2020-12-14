@@ -189,6 +189,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
                                                             vec2D K){
     
     int n_samples_loc = split_samples(n_samples);
+    int n_transformations = floor(log(L)/log(b_))-2;
     
     // equilibrate initial large lattice
     Ising2D* pIsingL;
@@ -203,62 +204,116 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
     Ising2D* pIsingS = new Ising2D(L/b_, K);
     pIsingS->equilibrate(n_samples_eq);
     
+    // transformed smaller lattice at n = 0
+    Ising2D* pIsingSb = pIsingS;
+    
     // containers
+    vec2D Kc;
+    double SL, SL_avg, SL_avg_loc;
+    double SLb, SLb_avg, SLb_avg_loc;
+    double SS, SS_avg, SS_avg_loc;
+    double SSb, SSb_avg, SSb_avg_loc;
+    double SLb_SL_avg, SLb_SL_avg_loc;
+    double SSb_SS_avg, SSb_SS_avg_loc;
+    
+    /*
     vec2D SL, SL_avg, SL_avg_loc;
     vec2D SLb, SLb_avg, SLb_avg_loc;
     vec2D SS, SS_avg, SS_avg_loc;
+    vec2D SSb, SSb_avg, SSb_avg_loc;
     mat2D SLb_SL_avg, SLb_SL_avg_loc;
-    mat2D SS_SS_avg, SS_SS_avg_loc;
+    mat2D SSb_SS_avg, SS_SS_avg_loc;
+    */
     
-    // calculate correlation functions
-    SL_avg_loc.setZero();
-    SLb_avg_loc.setZero();
-    SS_avg_loc.setZero();
-    SLb_SL_avg_loc.setZero();
-    SS_SS_avg_loc.setZero();
-    
-    if(rank_ == 0) printf("Sampling...\n");
-    for(int samples = 0; samples < n_samples_loc; ++samples){
+    for(int n = 0; n < n_transformations; ++n){
         
-        // get new samples
-        pIsingL->sample_spins();
-        pIsingLb->sample_spins();
-        pIsingS->sample_spins();
+        // calculate correlation functions
+        SL_avg_loc = 0.0;
+        SLb_avg_loc = 0.0;
+        SS_avg_loc = 0.0;
+        SSb_avg_loc = 0.0;
+        SLb_SL_avg_loc = 0.0;
+        SSb_SS_avg_loc = 0.0;
         
-        // calculate spin interactions for each lattice
-        SL = pIsingL->calc_spin_interactions();
-        SLb = pIsingLb->calc_spin_interactions();
-        SS = pIsingS->calc_spin_interactions();
         
-        // add up values for averages
-        SL_avg_loc += SL;
-        SLb_avg_loc += SLb;
-        SS_avg_loc += SS;
-        SLb_SL_avg_loc += SLb*SL.transpose();
-        SS_SS_avg_loc += SS*SS.transpose();
+        /*
+        SL_avg_loc.setZero();
+        SLb_avg_loc.setZero();
+        SS_avg_loc.setZero();
+        SLb_SL_avg_loc.setZero();
+        SS_SS_avg_loc.setZero();
+         */
+        
+        
+        if(rank_ == 0) printf("Sampling...\n");
+        for(int samples = 0; samples < n_samples_loc; ++samples){
+            
+            // get new samples
+            pIsingL->sample_spins();
+            pIsingLb->sample_spins();
+            pIsingS->sample_spins();
+            pIsingSb->sample_spins();
+            
+            // calculate nearest neighbor interaction
+            SL = pIsingL->calc_spin_interactions()(0);
+            SLb = pIsingLb->calc_spin_interactions()(0);
+            SS = pIsingS->calc_spin_interactions()(0);
+            SSb = pIsingSb->calc_spin_interactions()(0);
+            
+            // add up values for averages
+            SL_avg_loc += SL;
+            SLb_avg_loc += SLb;
+            SS_avg_loc += SS;
+            SSb_avg_loc += SSb;
+            SLb_SL_avg_loc += SLb*SL;
+            SSb_SS_avg_loc += SSb*SS;
+        }
+        
+        /*
+        MPI_Allreduce(SL_avg_loc.data(), SL_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(SLb_avg_loc.data(), SLb_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(SS_avg_loc.data(), SS_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(SLb_SL_avg_loc.data(), SLb_SL_avg.data(), 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(SS_SS_avg_loc.data(), SS_SS_avg.data(), 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        */
+        MPI_Allreduce(&SL_avg_loc, &SL_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&SLb_avg_loc, &SLb_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&SS_avg_loc, &SS_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&SSb_avg_loc, &SSb_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&SLb_SL_avg_loc, &SLb_SL_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&SSb_SS_avg_loc, &SSb_SS_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        
+        SL_avg /= n_samples;
+        SLb_avg /= n_samples;
+        SS_avg /= n_samples;
+        SSb_avg /= n_samples;
+        SLb_SL_avg /= n_samples;
+        SSb_SS_avg /= n_samples;
+        
+        double dSL_dK = SLb_SL_avg - SLb_avg * SL_avg;
+        double dSS_dK = SSb_SS_avg - SSb_avg * SS_avg;
+        double dK1 = (SLb_avg - SSb_avg) / (dSL_dK - dSS_dK);
+        Kc = K;
+        Kc(0) -= dK1;
+        
+        /*
+        mat2D dSL_dK = SLb_SL_avg - SLb_avg * SL_avg.transpose();
+        mat2D dSS_dK = SS_SS_avg - SS_avg * SS_avg.transpose();
+        vec2D dK = (dSL_dK-dSS_dK).inverse() * (SLb_avg-SS_avg);
+        vec Kc = K-dK;
+        */
+        
+        if(rank_ == 0){
+            printf("n = %i: Approximate Kc = ", n);
+            print_vec2D(Kc);
+        }
+        
+        pIsingLb = pIsingLb->block_spin_transformation(b_);
+        pIsingSb = pIsingSb->block_spin_transformation(b_);
+        
     }
     
-    MPI_Allreduce(SL_avg_loc.data(), SL_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Allreduce(SLb_avg_loc.data(), SLb_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Allreduce(SS_avg_loc.data(), SS_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Allreduce(SLb_SL_avg_loc.data(), SLb_SL_avg.data(), 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Allreduce(SS_SS_avg_loc.data(), SS_SS_avg.data(), 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    
-    SL_avg /= n_samples;
-    SLb_avg /= n_samples;
-    SS_avg /= n_samples;
-    SLb_SL_avg /= n_samples;
-    SS_SS_avg /= n_samples;
-    
-    mat2D dSL_dK = SLb_SL_avg - SLb_avg * SL_avg.transpose();
-    mat2D dSS_dK = SS_SS_avg - SS_avg * SS_avg.transpose();
-    vec2D dK = (dSL_dK-dSS_dK).inverse() * (SLb_avg-SS_avg);
-    vec Kc = K-dK;
-    
-    if(rank_ == 0){
-        printf("Approximate Kc = ");
-        print_vec2D(Kc);
-    }
+
     
     return Kc;
 }
