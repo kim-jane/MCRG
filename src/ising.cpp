@@ -248,6 +248,7 @@ bool Ising2D::grow_cluster(){
                     }
                 }
                 
+                /*
                 // if spin matches
                 if(spins_(i,j) == spins_(nnn(l,0), nnn(l,1))){
                     
@@ -264,6 +265,7 @@ bool Ising2D::grow_cluster(){
                         }
                     }
                 }
+                 */
             }
             
             // flip current spin
