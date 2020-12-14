@@ -8,7 +8,7 @@ int main(){
     
     int b = 2;
     vec2D Kc;
-    Kc(0) = -0.46;
+    Kc(0) = -0.45;
     Kc(1) = 0.0;
 
     /*
