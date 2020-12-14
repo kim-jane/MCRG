@@ -25,7 +25,7 @@ public:
     Ising2D* block_spin_transformation(int b);
     void display_spins();
     bool grow_cluster();
-    bool cluster_contains(int k);
+    bool in_cluster(int k);
     void initialize_spins();
     
 private:

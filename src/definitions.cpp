@@ -16,14 +16,6 @@ void display_spin_down(){
     printf("\033[37m%2s\033[0m", "X");
 }
 
-void display_cluster_up(){
-    printf("\033[31m%2s\033[0m", "O");
-}
-
-void display_cluster_down(){
-    printf("\033[31m%2s\033[0m", "X");
-}
-
 void print_bold(std::string message){
     
     printf("\033[1;37m%2s\033[0m", message.c_str());

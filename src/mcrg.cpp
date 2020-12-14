@@ -182,6 +182,68 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
     return K;
 }
 
+imat MonteCarloRenormalizationGroup::block_spin_transformation(imat spins){
+    
+    int N = spins.rows();
+    if(rank_ == 0){
+        if(N_%b != 0){
+            print_error("Lattice size is not divisible by the scaling factor.\n");
+            exit(1);
+        }
+        else{
+            printf("Block spin transformation N = %i --> %i\n", N_, N_/b);
+        }
+    }
+    
+    int Nb = N_/b;
+    int spin_tot;
+    imat block_spins(Nb, Nb);
+    
+    // loop thru blocks
+    for(int ib = 0; ib < Nb; ++ib){
+        for(int jb = 0; jb < Nb; ++jb){
+            
+            // loop thru spins in each block
+            spin_tot = 0;
+            for(int i = ib*b; i < (ib+1)*b; ++i){
+                for(int j = jb*b; j < (jb+1)*b; ++j){
+                    spin_tot += spins_(i,j);
+                }
+            }
+            
+            // majority rule
+            if(spin_tot == 0){
+                block_spins(ib, jb) = rand_spin();
+            }
+            else if(spin_tot > 0){
+                block_spins(ib, jb) = 1;
+            }
+            else{
+                block_spins(ib, jb) = -1;
+            }
+        }
+    }
+    
+    Ising2D* pIsing = new Ising2D(Nb, K_);
+    pIsing->spins_ = block_spins;
+    pIsing->a_ = a_*b;
+    pIsing->display_spins();
+    pIsing->equilibrate(1E3);
+
+    return pIsing;
+}
+
+
+vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
+                                                            int n_samples,
+                                                            int L,
+                                                            vec2D K){
+
+    
+
+}
+
+
 
 vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
                                                             int n_samples,
