@@ -127,6 +127,7 @@ Ising2D* Ising2D::block_spin_transformation(int b){
     pIsing->spins_ = block_spins;
     pIsing->a_ = a_*b;
     pIsing->display_spins();
+    pIsing->equilibrate(1E3);
 
     return pIsing;
 }
