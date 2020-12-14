@@ -196,9 +196,12 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
     // apply 1 transformation to large lattice
     Ising2D* pIsingLb = pIsingL->block_spin_transformation(b_);
     
+    // TESTING
+    pIsingLb = pIsingLb->block_spin_transformation(b_);
+    
     // equilibrate small lattice with the same number of
     // lattice sites as transformed large lattice
-    Ising2D* pIsingS = new Ising2D(L/b_, K);
+    Ising2D* pIsingS = new Ising2D(L/b_/b_, K);
     pIsingS->equilibrate(n_samples_eq);
     
     // containers
