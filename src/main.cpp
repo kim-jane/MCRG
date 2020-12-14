@@ -20,7 +20,7 @@ int main(){
     
     MonteCarloRenormalizationGroup MCRG(b);
     
-    Kc = MCRG.locate_critical_point(1E3, 1E5, 1E6, 32, Kc);
+    Kc = MCRG.locate_critical_point(1E3, 1E5, 1E6, 64, Kc);
     //MCRG.calc_critical_exponent(10, 1E5, 1E6, 64, Kc);
     
     MPI_Finalize();
