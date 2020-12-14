@@ -271,6 +271,9 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
             printf("Approximate Kc = ");
             print_vec2D(Kc);
         }
+        
+        pIsingLb = pIsingLb->block_spin_transformation(b_);
+        pIsingSb = pIsingSb->block_spin_transformation(b_);
     }
     
 
