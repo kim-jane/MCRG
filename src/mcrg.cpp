@@ -237,7 +237,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
             SL = pIsingL->calc_spin_interactions();
             SLb = pIsingLb->calc_spin_interactions();
             SS = pIsingS->calc_spin_interactions();
-            Sb = pIsingSb->calc_spin_interactions();
+            SSb = pIsingSb->calc_spin_interactions();
             
             // add up values for averages
             SL_avg_loc += SL;
@@ -251,7 +251,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
         MPI_Allreduce(SL_avg_loc.data(), SL_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         MPI_Allreduce(SLb_avg_loc.data(), SLb_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         MPI_Allreduce(SS_avg_loc.data(), SS_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(Sb_avg_loc.data(), Sb_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(SSb_avg_loc.data(), SSb_avg.data(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         MPI_Allreduce(SLb_SL_avg_loc.data(), SLb_SL_avg.data(), 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         MPI_Allreduce(SSb_SS_avg_loc.data(), SSb_SS_avg.data(), 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         
