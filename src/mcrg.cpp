@@ -225,7 +225,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
     mat2D SSb_SS_avg, SS_SS_avg_loc;
     */
     
-    for(int n = 0; n < n_transformations; ++n){
+    for(int n = 0; n <= n_transformations; ++n){
         
         // calculate correlation functions
         SL_avg_loc = 0.0;
@@ -307,7 +307,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
             printf("n = %i: Approximate Kc = ", n);
             print_vec2D(Kc);
         }
-        if(n < n_transformations-1){
+        if(n < n_transformations){
             pIsingLb = pIsingLb->block_spin_transformation(b_);
             pIsingSb = pIsingSb->block_spin_transformation(b_);
         }
