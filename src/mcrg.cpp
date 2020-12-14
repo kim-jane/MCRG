@@ -213,6 +213,8 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
     mat2D SLb_SL_avg, SLb_SL_avg_loc;
     //mat2D SS_SS_avg, SS_SS_avg_loc;
     
+    vec2D Kc;
+    
     for(int n = 0; n < 2; ++n){
         
         // calculate correlation functions
@@ -265,7 +267,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
         mat2D dSL_dK = SLb_SL_avg - SLb_avg * SL_avg.transpose();
         mat2D dSS_dK = SSb_SS_avg - SSb_avg * SS_avg.transpose();
         vec2D dK = (dSL_dK-dSS_dK).inverse() * (SLb_avg-SSb_avg);
-        vec Kc = K-dK;
+        Kc = K-dK;
         
         if(rank_ == 0){
             printf("Approximate Kc = ");
