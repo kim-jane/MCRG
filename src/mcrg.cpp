@@ -189,7 +189,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
                                                             vec2D K){
     
     int n_samples_loc = split_samples(n_samples);
-    int n_transformations = floor(log(L)/log(b_));
+    int n_transformations = 1;
     
     // equilibrate initial large lattice
     Ising2D* pIsingL;
