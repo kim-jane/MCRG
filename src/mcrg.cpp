@@ -151,13 +151,15 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
     vec2D K = K0;
     for(int i = 1; i <= n_iterations; ++i){
         
-        //K(1) = 0.0;
+        // start on K1-axis always
+        K(1) = 0.0;
         
         if(rank_ == 0){
             printf("\nIteration %i: \n", i);
             fprintf(fptr, "%15i, %15.10lf, %15.10lf, ", i, K(0), K(1));
         }
 
+        // get new approximation
         K = approx_critical_point(n_samples_eq, n_samples, L, K);
         
         if(rank_ == 0){
