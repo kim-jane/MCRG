@@ -141,7 +141,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
     
     vec2D Kc = K;
     int n_samples_loc = split_samples(n_samples);
-    int n_transformations = floor(log(L)/log(b_))-2;
+    int n_transformations = floor(log(L)/log(b_))-1;
     
     // initialize Ising model at initial K
     IsingModel* pIsing = new IsingModel(Kc);
