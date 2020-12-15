@@ -138,13 +138,11 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
                                                             int n_samples,
                                                             int L,
                                                             vec2D K){
-    
-    vec2D Kc = K;
     int n_samples_loc = split_samples(n_samples);
     int n_transformations = floor(log(L)/log(b_))-1;
     
-    // initialize Ising model at initial K
-    IsingModel* pIsing = new IsingModel(Kc);
+    // initialize Ising model at K
+    IsingModel* pIsing = new IsingModel(K);
     
     // equilibrate large lattice
     Lattice* pLatticeL = new Lattice(L);
@@ -221,6 +219,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
         double dSL_dK = SLb_SL_avg - SLb_avg * SL_avg;
         double dSS_dK = SSb_SS_avg - SSb_avg * SS_avg;
         double dK1 = (SLb_avg - SSb_avg) / (dSL_dK - dSS_dK);
+        vec2D Kc = K;
         Kc(0) -= dK1;
         
         if(rank_ == 0){
