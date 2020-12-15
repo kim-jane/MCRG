@@ -162,6 +162,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
     double SSb_SS_avg, SSb_SS_avg_loc;
     Lattice* pLatticeLb = NULL;
     Lattice* pLatticeSb = NULL;
+    vec2D Kc;
     
     for(int n = 0; n < n_transformations; ++n){
         
@@ -219,7 +220,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
         double dSL_dK = SLb_SL_avg - SLb_avg * SL_avg;
         double dSS_dK = SSb_SS_avg - SSb_avg * SS_avg;
         double dK1 = (SLb_avg - SSb_avg) / (dSL_dK - dSS_dK);
-        vec2D Kc = K;
+        Kc = K;
         Kc(0) -= dK1;
         
         if(rank_ == 0){
