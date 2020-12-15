@@ -2,6 +2,7 @@
 #include <mpi.h>
 #include "definitions.hpp"
 #include "lattice.hpp"
+#include <memory>
 
 class IsingModel{
 public:

@@ -1,6 +1,7 @@
 #pragma once
 #include "lattice.hpp"
 #include "ising.hpp"
+#include <memory>
 
 class MonteCarloRenormalizationGroup{
     
