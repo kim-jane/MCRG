@@ -96,7 +96,7 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
     }
     
     // sum results from all parallel processes
-    MPI_Allreduce(&S_avg_loc, &S_avg, 2*(n_transformations+1), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(S_avg_loc.data(), S_avg.data(), 2*(n_transformations+1), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     MPI_Allreduce(Sb_S_avg_loc.data(), Sb_S_avg.data(), 4*n_transformations, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     MPI_Allreduce(Sb_Sb_avg_loc.data(), Sb_Sb_avg.data(), 4*n_transformations, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     
