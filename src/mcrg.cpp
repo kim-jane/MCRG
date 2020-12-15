@@ -193,9 +193,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
             SS = pLatticeS->calc_nearest_neighbor_interaction();
             SLb = pLatticeLb->calc_nearest_neighbor_interaction();
             SSb = pLatticeSb->calc_nearest_neighbor_interaction();
-            
-            printf("%lf %lf %lf %lf\n", SL, SS, SLb, SSb);
-            
+                        
             // add up values for averages
             SL_avg_loc += SL;
             SLb_avg_loc += SLb;
