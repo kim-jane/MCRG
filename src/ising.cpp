@@ -8,7 +8,7 @@ IsingModel::IsingModel(vec2D K){
     K_ = K;
 }
 
-void IsingModel::equilibrate(Lattice* pLattice, int n_samples_eq, bool write){
+void IsingModel::equilibrate(std::shared_ptr<Lattice> pLattice, int n_samples_eq, bool write){
 
     FILE* fptr = NULL;
     if(rank_ == 0){
@@ -79,7 +79,7 @@ void IsingModel::equilibrate(Lattice* pLattice, int n_samples_eq, bool write){
     }
 }
 
-double IsingModel::calc_energy(Lattice* pLattice){
+double IsingModel::calc_energy(std::shared_ptr<Lattice> pLattice){
     
     double E = 0.0;
     imat nn, nnn;
@@ -101,13 +101,13 @@ double IsingModel::calc_energy(Lattice* pLattice){
 }
 
 
-double IsingModel::calc_magnetization(Lattice* pLattice){
+double IsingModel::calc_magnetization(std::shared_ptr<Lattice> pLattice){
     
     return pLattice->spins_.sum();
 }
 
 
-void IsingModel::sample_new_configuration(Lattice* pLattice){
+void IsingModel::sample_new_configuration(std::shared_ptr<Lattice> pLattice){
 
     cluster_.clear();
     bool cluster_grew;
@@ -120,7 +120,7 @@ void IsingModel::sample_new_configuration(Lattice* pLattice){
 }
 
 
-bool IsingModel::grow_cluster(Lattice* pLattice){
+bool IsingModel::grow_cluster(std::shared_ptr<Lattice> pLattice){
     
     bool cluster_grew = false;
     int i, j, k, n;

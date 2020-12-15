@@ -289,7 +289,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
 
 
 
-Lattice* MonteCarloRenormalizationGroup::block_spin_transformation(Lattice* pLattice){
+std::shared_ptr<Lattice> MonteCarloRenormalizationGroup::block_spin_transformation(std::shared_ptr<Lattice> pLattice){
     
     int Nb = pLattice->N_/b_;
     int spin_tot;

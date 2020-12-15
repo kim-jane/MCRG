@@ -32,6 +32,6 @@ public:
                                 vec2D K,
                                 FILE* fptr);
     
-    Lattice* block_spin_transformation(Lattice* pLattice);
+    std::shared_ptr<Lattice> block_spin_transformation(std::shared_ptr<Lattice> pLattice);
     int split_samples(int n_samples);
 };

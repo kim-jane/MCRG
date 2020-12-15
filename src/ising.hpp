@@ -15,11 +15,11 @@ public:
     
     std::vector<int> cluster_;
 
-    void equilibrate(Lattice* pLattice, int n_samples_eq, bool write);
-    double calc_magnetization(Lattice* pLattice);
-    double calc_energy(Lattice* pLattice);
-    void sample_new_configuration(Lattice* pLattice);
-    bool grow_cluster(Lattice* pLattice);
+    void equilibrate(std::shared_ptr<Lattice>, int n_samples_eq, bool write);
+    double calc_magnetization(std::shared_ptr<Lattice>);
+    double calc_energy(std::shared_ptr<Lattice>);
+    void sample_new_configuration(std::shared_ptr<Lattice>);
+    bool grow_cluster(std::shared_ptr<Lattice>);
     bool in_cluster(int k);
     
 
