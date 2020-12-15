@@ -18,7 +18,7 @@ MonteCarloRenormalizationGroup::MonteCarloRenormalizationGroup(int b){
     }
 }
 
-/*
+
 void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
                                                             int n_samples,
                                                             int N,
@@ -38,78 +38,101 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
     }
     
     int n_samples_loc = split_samples(n_samples);
-    int n_transformations = floor(log(L)/log(b_))-1;
+    int n_transformations = floor(log(N)/log(b_))-1;
 
     // initialize Ising model at K
-    pIsing = new IsingModel(K);
-
-    // equilibrate lattice at critical coupling
-    pLattice = new Lattice(N);
+    std::unique_ptr<IsingModel> pIsing(new IsingModel(K));
+    
+    // equilibrate lattice
+    std::shared_ptr<Lattice> pLattice(new Lattice(N));
     pIsing->equilibrate(pLattice, n_samples_eq, false);
     
     // containers
-    mat S_avg(n_transformations,2);
-    mat Sb_S_avg(n_transformations,2);
-    mat Sb_Sb_avg(n_transformations,2);
-    mat S_avg_loc(n_transformations,2);
-    mat Sb_S_avg_loc(n_transformations,2);
-    mat Sb_Sb_avg_loc(n_transformations,2);
-    Lattice* pLatticeb = NULL;
+    vec2D S_vec, Sb_vec;
+    vec4D Sb_S_flattened, Sb_Sb_flattened;
+    mat2D Sb_S, Sb_Sb;
+    mat S(n_transformations+1,2);
+    mat S_avg(n_transformations+1,2);
+    mat Sb_S_avg(n_transformations,4);
+    mat Sb_Sb_avg(n_transformations,4);
+    mat S_avg_loc(n_transformations+1,2);
+    mat Sb_S_avg_loc(n_transformations,4);
+    mat Sb_Sb_avg_loc(n_transformations,4);
+    std::shared_ptr<Lattice> pLatticeb;
     
     // set local sums to zero
     S_avg_loc.setZero();
-    S_S_avg_loc.setZero();
-    
+    Sb_S_avg_loc.setZero();
+    Sb_Sb_avg_loc.setZero();
     
     // start sampling
     if(rank_ == 0) printf("Sampling %i configurations...\n", n_samples);
     for(int samples = 0; samples < n_samples_loc; ++samples){
         
-        // get new configurations
+        // get new configuration
         pIsing->sample_new_configuration(pLattice);
         
         // calculate spin interactions at each blocking level
-        S(0) = pLattice->calc_interactions();
+        S.row(0) = pLattice->calc_interactions();
         pLatticeb = pLattice;
         for(int n = 1; n <= n_transformations; ++n){
             
             pLatticeb = block_spin_transformation(pLatticeb);
-            S(n) = pLatticeb->calc_interactions();
+            S.row(n) = pLatticeb->calc_interactions();
             
             // add up values for averages
-            S_S_avg_loc(n) += S(n)*S(n);
-            Sb_S_avg_loc(n) += S(n)*S(n-1);
+            Sb_vec = S.row(n);
+            S_vec = S.row(n-1);
+            Sb_S = Sb_vec*S_vec.transpose();
+            Sb_Sb = Sb_vec*Sb_vec.transpose();
+            Sb_S_flattened = flatten(Sb_S);
+            Sb_Sb_flattened = flatten(Sb_Sb);
+            Sb_S_avg_loc.row(n-1) += Sb_S_flattened;
+            Sb_Sb_avg_loc.row(n-1) += Sb_Sb_flattened;
         }
         
         // add up values for averages
         S_avg_loc += S;
     }
     
-    MPI_Allreduce(&SL_avg_loc, &SL_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Allreduce(&SS_avg_loc, &SS_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Allreduce(SLb_avg_loc.data(), SLb_avg.data(), n_transformations, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Allreduce(SSb_avg_loc.data(), SSb_avg.data(), n_transformations, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Allreduce(SLb_SL_avg_loc.data(), SLb_SL_avg.data(), n_transformations, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Allreduce(SSb_SS_avg_loc.data(), SSb_SS_avg.data(), n_transformations, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    // sum results from all parallel processes
+    MPI_Allreduce(&S_avg_loc, &S_avg, 2*(n_transformations+1), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(Sb_S_avg_loc.data(), Sb_S_avg.data(), 4*n_transformations, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(Sb_Sb_avg_loc.data(), Sb_Sb_avg.data(), 4*n_transformations, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     
-    SL_avg /= n_samples;
-    SS_avg /= n_samples;
-    SLb_avg /= n_samples;
-    SSb_avg /= n_samples;
-    SLb_SL_avg /= n_samples;
-    SSb_SS_avg /= n_samples;
-
-    delete pIsing;
-    delete pLattice;
-    delete pLatticeb;
+    // average
+    S_avg /= n_samples;
+    Sb_S_avg /= n_samples;
+    Sb_Sb_avg /= n_samples;
+    
+    // calculate RG eigenvalues at various blocking levels
+    mat2D dSb_dK, dSb_dKb, T;
+    double lambda, lambda1, lambda2;
+    for(int n = 0; n < n_transformations; ++n){
+        
+        Sb_S_flattened = Sb_S_avg.row(n);
+        Sb_Sb_flattened = Sb_Sb_avg.row(n);
+        Sb_vec = S_avg.row(n+1);
+        S_vec = S_avg.row(n);
+        
+        dSb_dK = unflatten(Sb_S_flattened)-Sb_vec*S_vec.transpose();
+        dSb_dKb = unflatten(Sb_Sb_flattened)-Sb_vec*Sb_vec.transpose();
+        T = dSb_dK * dSb_dKb.inverse();
+        
+        // get largest eigenvalue
+        EigenSolver<mat2D> solver(T);
+        lambda1 = solver.eigenvalues()(0).real();
+        lambda2 = solver.eigenvalues()(1).real();
+        if(lambda1 > lambda2) lambda = lambda1;
+        else lambda = lambda2;
+        
+        if(rank_ == 0) printf("n = %i: lambda = %lf\n", n, lambda);
+    }
     
     if(rank_ == 0){
         fclose(fptr);
     }
-    
-
 }
-*/
 
 vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
                                                             int n_samples_eq,

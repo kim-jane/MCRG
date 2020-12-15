@@ -5,6 +5,22 @@ std::mt19937_64 rng(rd());
 std::uniform_int_distribution<int> binary(0,1);
 std::uniform_real_distribution<double> unif(0.0,1.0);
 
+vec4D flatten(mat2D M){
+    
+    vec4D v;
+    v.head(2) = M.col(0);
+    v.tail(2) = M.col(1);
+    return v;
+}
+
+mat2D unflatten(vec4D v){
+    
+    mat2D M;
+    M.col(0) = v.head(2);
+    M.col(1) = v.tail(2);
+    return M;
+}
+
 
 void display_spin_up(){
     

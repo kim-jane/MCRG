@@ -16,8 +16,7 @@ public:
     int iter_;
     FILE* fptr_;
     
-    void calc_critical_exponent(int n_iterations,
-                                int n_samples_eq,
+    void calc_critical_exponent(int n_samples_eq,
                                 int n_samples,
                                 int N,
                                 vec2D Kc);

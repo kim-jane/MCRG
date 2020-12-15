@@ -15,10 +15,13 @@ using namespace Eigen;
 using mat = Matrix<double, Dynamic, Dynamic, ColMajor>;
 using imat = Matrix<int, Dynamic, Dynamic, ColMajor>;
 using mat2D = Matrix<double, 2, 2>;
-
 using vec = Matrix<double, Dynamic, 1>;
 using ivec = Matrix<int, Dynamic, 1>;
 using vec2D = Matrix<double, 2, 1>;
+using vec4D = Matrix<double, 4, 1>;
+
+extern vec4D flatten(mat2D M);
+extern mat2D unflatten(vec4D v);
 
 
 // random number generators
