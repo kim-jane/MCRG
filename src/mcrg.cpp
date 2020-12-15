@@ -188,14 +188,13 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
             // apply n transformations to small lattice sample
             pLatticeSb = block_spin_transformation(pLatticeS, n);
             
-            pLatticeLb->display_spins();
-            pLatticeSb->display_spins();
-            
             // calculate nearest neighbor interactions
             SL = pLatticeL->calc_nearest_neighbor_interaction();
             SS = pLatticeS->calc_nearest_neighbor_interaction();
             SLb = pLatticeLb->calc_nearest_neighbor_interaction();
             SSb = pLatticeSb->calc_nearest_neighbor_interaction();
+            
+            printf("%lf %lf %lf %lf\n", SL, SS, SLb, SSb);
             
             // add up values for averages
             SL_avg_loc += SL;
@@ -281,7 +280,6 @@ Lattice* MonteCarloRenormalizationGroup::block_spin_transformation(Lattice* pLat
     }
     
     Lattice* pLatticeb = new Lattice(pLattice->a_*b_, block_spins);
-    pLatticeb->display_spins();
 
     return pLatticeb;
 }
