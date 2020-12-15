@@ -112,26 +112,10 @@ void IsingModel::sample_new_configuration(std::shared_ptr<Lattice> pLattice){
     cluster_.clear();
     bool cluster_grew;
     
-    // add spins to cluster until either
-    // cluster stops growing or cluster is empty
+    // add spins until cluster stops growing or cluster is empty
     do{
         cluster_grew = grow_cluster(pLattice);
     }while(cluster_grew == true && cluster_.size() > 0);
-    
-    // if cluster is not empty, flip entire cluster
-    int n_cluster = cluster_.size();
-    if(n_cluster > 0){
-        
-        printf("cluster is not empty\n");
-        int i, j, k;
-        for(int c = 0; c < n_cluster; ++c){
-
-            k = cluster_[c];
-            i = ((k%pLattice->N_)+pLattice->N_)%pLattice->N_;
-            j = floor((double)k/pLattice->N_);
-            pLattice->spins_(i,j) *= -1;
-        }
-    }
 }
 
 
