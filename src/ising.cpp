@@ -121,6 +121,8 @@ void IsingModel::sample_new_configuration(std::shared_ptr<Lattice> pLattice){
     // if cluster is not empty, flip entire cluster
     int n_cluster = cluster_.size();
     if(n_cluster > 0){
+        
+        printf("cluster is not empty\n");
         int i, j, k;
         for(int c = 0; c < n_cluster; ++c){
 
