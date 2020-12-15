@@ -168,15 +168,18 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
     int n_transformations = floor(log(L)/log(b_))-2;
     
     // initialize Ising model at K
-    IsingModel* pIsing = new IsingModel(K);
+    std::shared_ptr<IsingModel> pIsing(new IsingModel(K));
+    //IsingModel* pIsing = new IsingModel(K);
     
     // equilibrate large lattice
-    Lattice* pLatticeL = new Lattice(L);
+    std::shared_ptr<Lattice> pLatticeL(new Lattice(L));
+    //Lattice* pLatticeL = new Lattice(L);
     pIsing->equilibrate(pLatticeL, n_samples_eq, false);
     
     // equilibrate small lattice
     int S = L/b_;
-    Lattice* pLatticeS = new Lattice(S);
+    std::shared_ptr<Lattice> pLatticeS(new Lattice(S));
+    //Lattice* pLatticeS = new Lattice(S);
     pIsing->equilibrate(pLatticeS, n_samples_eq, false);
     
     // containers
@@ -191,8 +194,8 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
     vec SSb_avg_loc(n_transformations);
     vec SLb_SL_avg_loc(n_transformations);
     vec SSb_SS_avg_loc(n_transformations);
-    Lattice* pLatticeLb = NULL;
-    Lattice* pLatticeSb = NULL;
+    std::shared_ptr<Lattice> pLatticeLb;
+    std::shared_ptr<Lattice> pLatticeSb;
     
     // set local sums to zero
     SL_avg_loc = 0.0;
@@ -253,12 +256,14 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
     SLb_SL_avg /= n_samples;
     SSb_SS_avg /= n_samples;
     
+    /*
     // delete pointers
     delete pIsing;
     delete pLatticeL;
     delete pLatticeS;
     delete pLatticeLb;
     delete pLatticeSb;
+     */
     
     // calculate distance to critical point for various blocking levels
     vec2D Kc;
@@ -315,7 +320,8 @@ Lattice* MonteCarloRenormalizationGroup::block_spin_transformation(Lattice* pLat
         }
     }
     
-    Lattice* pLatticeb = new Lattice(pLattice->a_*b_, block_spins);
+    std::shared_ptr<Lattice> pLatticeb(new Lattice(pLattice->a_*b_, block_spins));
+    //Lattice* pLatticeb = new Lattice(pLattice->a_*b_, block_spins);
 
     return pLatticeb;
 }
