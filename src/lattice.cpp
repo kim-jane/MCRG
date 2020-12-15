@@ -17,11 +17,11 @@ Lattice::Lattice(int a, imat spins){
     MPI_Comm_size(MPI_COMM_WORLD, &n_processes_);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
     
+    spins_ = spins;
     a_ = a;
     N_ = spins_.rows();
     n_spins_ = N_*N_;
     rand_spin_index_ = std::uniform_int_distribution<int>(0, n_spins_-1);
-    spins_ = spins;
 }
 
 void Lattice::initialize_random_spins(){
