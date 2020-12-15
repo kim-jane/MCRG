@@ -97,8 +97,8 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
                                +"_K1_"+get_rounded_str(K0(0))
                                +"_K2_"+get_rounded_str(K0(1))+".txt";
         fptr = fopen(filename.c_str(), "w");
-        fprintf(fptr, "# %13s  %15s  %15s  %15s  %15s\n",
-                "Iteration", "K1", "K2", "K1'", "K2'");
+        fprintf(fptr, "# %13s  %15s\n",
+                "Iteration", "K1");
     }
     
     // iteratively approach critical point
@@ -107,15 +107,11 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
         
         if(rank_ == 0){
             printf("\nIteration %i: \n", i);
-            fprintf(fptr, "%15i, %15.10lf, %15.10lf, ", i, K(0), K(1));
+            fprintf(fptr, "%15i, %15.10lf,\n", i, K(0));
         }
 
         // get new approximation
         K = approx_critical_point(n_samples_eq, n_samples, L, K);
-        
-        if(rank_ == 0){
-            fprintf(fptr, "%15.10lf, %15.10lf,\n", K(0), K(1));
-        }
     }
     
     // print results
