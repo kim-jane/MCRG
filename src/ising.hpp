@@ -1,42 +1,26 @@
 #pragma once
 #include <mpi.h>
 #include "definitions.hpp"
+#include "lattice.hpp"
 
-class Ising2D{
+class IsingModel{
 public:
     
-    int N_;
-    int n_spins_;
-    int a_;
-    vec K_;
-    imat spins_;
-
-    std::uniform_int_distribution<int> rand_spin_index_;
-    
-    Ising2D(int N, vec2D K);
-    ~Ising2D(){}
-    
-    void sample_spins();
-    void set_spins(imat new_spins);
-    void equilibrate(int n_samples);
-    double calc_magnetization();
-    double calc_energy();
-    vec2D calc_spin_interactions();
-    Ising2D* block_spin_transformation(int b);
-    void display_spins();
-    bool grow_cluster();
-    bool in_cluster(int k);
-    void initialize_spins();
-    
-private:
+    IsingModel(vec2D K);
+    ~IsingModel(){}
     
     int rank_;
     int n_processes_;
+    vec K_;
     
     std::vector<int> cluster_;
+
+    void equilibrate(Lattice* pLattice, int n_samples_eq, bool write);
+    double calc_magnetization(Lattice* pLattice);
+    double calc_energy(Lattice* pLattice);
+    void sample_new_configuration(Lattice* pLattice);
+    bool grow_cluster(Lattice* pLattice);
+    bool in_cluster(int k);
     
-    
-    double calc_probability_flip(int i, int j);
-    imat nearest_neighbors(int i, int j);
-    imat next_nearest_neighbors(int i, int j);
+
 };

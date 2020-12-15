@@ -1,4 +1,5 @@
 #pragma once
+#include "lattice.hpp"
 #include "ising.hpp"
 
 class MonteCarloRenormalizationGroup{
@@ -30,5 +31,7 @@ public:
                                 int L,
                                 vec2D K);
     
+    Lattice* block_spin_transformation(Lattice* pLattice, int n);
+    Lattice* block_spin_transformation(Lattice* pLattice);
     int split_samples(int n_samples);
 };

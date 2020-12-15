@@ -28,7 +28,7 @@ void print_error(std::string message){
 
 void print_vec2D(vec2D v){
     
-    printf("(%.10lf, %.10lf)\n", v(0), v(1));
+    printf("(%.7lf, %.7lf)\n", v(0), v(1));
 }
 
 bool write_iter(int i){
