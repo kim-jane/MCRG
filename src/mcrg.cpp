@@ -161,7 +161,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
     Lattice* pLatticeSb = NULL;
     vec2D Kc;
     
-    for(int n = 0; n < n_transformations; ++n){
+    for(int n = 0; n <= n_transformations; ++n){
         
         // calculate correlation functions
         SL_avg_loc = 0.0;
