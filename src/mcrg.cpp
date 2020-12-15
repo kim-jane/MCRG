@@ -9,75 +9,105 @@ MonteCarloRenormalizationGroup::MonteCarloRenormalizationGroup(int b){
     
     if(rank_ == 0){
         
-        print_bold("\n=============================================\n");
-        print_bold("==========       MONTE CARLO       ==========\n");
-        print_bold("==========  RENORMALIZATION GROUP  ==========\n");
-        print_bold("=============================================\n\n");
-        print_bold("* Using "+std::to_string(n_processes_)+" parallel process(es)\n");
-        print_bold("* Scaling factor b = "+std::to_string(b_)+"\n");
+        printf("\n=============================================\n");
+        printf("==========       MONTE CARLO       ==========\n");
+        printf("==========  RENORMALIZATION GROUP  ==========\n");
+        printf("=============================================\n\n");
+        printf("* Using %i parallel process(es)\n", n_processes_);
+        printf("* Scaling factor b = %i\n", b_);
     }
 }
 
 /*
 void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
                                                             int n_samples,
-                                                            int N0,
-                                                            vec2D Kc){
+                                                            int N,
+                                                            vec2D K){
     // open file
     FILE* fptr = NULL;
     if(rank_ == 0){
         
-        print_bold("* Calculating critical exponent at Kc = ");
-        print_vec2D(Kc);
+        print_bold("* Calculating critical exponent at K = ");
+        print_vec2D(K);
         
-        
-        std::string filename = "critical_exponent_N_"+std::to_string(N0)
-                               +"_K1_"+get_rounded_str(Kc(0))
-                               +"_K2_"+get_rounded_str(Kc(1))+".txt";
+        std::string filename = "critical_exponent_N_"+std::to_string(N)
+                               +"_K1_"+get_rounded_str(K(0))
+                               +"_K2_"+get_rounded_str(K(1))+".txt";
         fptr = fopen(filename.c_str(), "w");
         fprintf(fptr, "# %23s  %25s\n", "Blocking Level n", "Critical Exponent nu");
     }
     
     int n_samples_loc = split_samples(n_samples);
-    int n_transformations = floor(log(N0)/log(b_))-1;
-    vec2D S, Sb;
-    mat S_avg(n_transformations, 2);
+    int n_transformations = floor(log(L)/log(b_))-1;
 
-    
-    // initialize Ising model at critical coupling
-    pIsing = new IsingModel(Kc);
+    // initialize Ising model at K
+    pIsing = new IsingModel(K);
 
-    // equilibrate initial lattice at critical coupling
-    pLattice = new Lattice(N0);
+    // equilibrate lattice at critical coupling
+    pLattice = new Lattice(N);
     pIsing->equilibrate(pLattice, n_samples_eq, false);
+    
+    // containers
+    mat S_avg(n_transformations,2);
+    mat Sb_S_avg(n_transformations,2);
+    mat Sb_Sb_avg(n_transformations,2);
+    mat S_avg_loc(n_transformations,2);
+    mat Sb_S_avg_loc(n_transformations,2);
+    mat Sb_Sb_avg_loc(n_transformations,2);
+    Lattice* pLatticeb = NULL;
+    
+    // set local sums to zero
+    S_avg_loc.setZero();
+    S_S_avg_loc.setZero();
+    
     
     // start sampling
     if(rank_ == 0) printf("Sampling %i configurations...\n", n_samples);
     for(int samples = 0; samples < n_samples_loc; ++samples){
         
-        // get new configuration
+        // get new configurations
         pIsing->sample_new_configuration(pLattice);
         
-        // calculate spin interactions
-        S = pLattice->calc_interactions();
-        
-        //
-        S_avg.row(0) =
-        
+        // calculate spin interactions at each blocking level
+        S(0) = pLattice->calc_interactions();
+        pLatticeb = pLattice;
         for(int n = 1; n <= n_transformations; ++n){
             
-            // apply block spin transformations on new configuration
-            pLatticeb = block_spin_transformation(pLattice);
+            pLatticeb = block_spin_transformation(pLatticeb);
+            S(n) = pLatticeb->calc_interactions();
             
+            // add up values for averages
+            S_S_avg_loc(n) += S(n)*S(n);
+            Sb_S_avg_loc(n) += S(n)*S(n-1);
         }
+        
+        // add up values for averages
+        S_avg_loc += S;
     }
-
     
+    MPI_Allreduce(&SL_avg_loc, &SL_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&SS_avg_loc, &SS_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(SLb_avg_loc.data(), SLb_avg.data(), n_transformations, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(SSb_avg_loc.data(), SSb_avg.data(), n_transformations, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(SLb_SL_avg_loc.data(), SLb_SL_avg.data(), n_transformations, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(SSb_SS_avg_loc.data(), SSb_SS_avg.data(), n_transformations, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    
+    SL_avg /= n_samples;
+    SS_avg /= n_samples;
+    SLb_avg /= n_samples;
+    SSb_avg /= n_samples;
+    SLb_SL_avg /= n_samples;
+    SSb_SS_avg /= n_samples;
+
+    delete pIsing;
+    delete pLattice;
+    delete pLatticeb;
     
     if(rank_ == 0){
-
         fclose(fptr);
     }
+    
+
 }
 */
 
@@ -172,7 +202,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
     SLb_SL_avg_loc.setZero();
     SSb_SS_avg_loc.setZero();
     
-    if(rank_ == 0) printf("Sampling...\n");
+    if(rank_ == 0) printf("Sampling %i configurations each...\n", n_samples);
     for(int samples = 0; samples < n_samples_loc; ++samples){
         
         // get new configurations
@@ -223,6 +253,13 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
     SLb_SL_avg /= n_samples;
     SSb_SS_avg /= n_samples;
     
+    // delete pointers
+    delete pIsing;
+    delete pLatticeL;
+    delete pLatticeS;
+    delete pLatticeLb;
+    delete pLatticeSb;
+    
     // calculate distance to critical point for various blocking levels
     vec2D Kc;
     double dK1, dSL_dK, dSS_dK;
@@ -238,7 +275,6 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
             
             printf("n = %i: Kc = ", n);
             print_vec2D(Kc);
-            printf("\n");
         }
     }
     
