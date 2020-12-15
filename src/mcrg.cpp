@@ -94,24 +94,23 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
     
         // open file
         std::string filename = "critical_point_L_"+std::to_string(L)
-                               +"_K1_"+get_rounded_str(K0(0))
-                               +"_K2_"+get_rounded_str(K0(1))+".txt";
+                               +"_K1_"+get_rounded_str(K0(0))+".txt";
         fptr = fopen(filename.c_str(), "w");
-        fprintf(fptr, "# %13s  %15s\n",
-                "Iteration", "K1");
+        fprintf(fptr, "# %13s  %15s\n", "Iteration", "K1");
     }
     
     // iteratively approach critical point
     vec2D K = K0;
     for(int i = 1; i <= n_iterations; ++i){
         
+        // print iteration
         if(rank_ == 0){
             printf("\nIteration %i: \n", i);
-            fprintf(fptr, "%15i, %15.10lf,\n", i, K(0));
+            fprintf(fptr, "%15i, %15.10lf\n", i, K(0));
         }
 
         // get new approximation
-        K = approx_critical_point(n_samples_eq, n_samples, L, K);
+        K = approx_critical_point(n_samples_eq, n_samples, L, K, fptr);
     }
     
     // print results
@@ -133,9 +132,10 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
 vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
                                                             int n_samples,
                                                             int L,
-                                                            vec2D K){
+                                                            vec2D K,
+                                                            FILE* fptr){
     int n_samples_loc = split_samples(n_samples);
-    int n_transformations = floor(log(L)/log(b_))-2;
+    int n_transformations = floor(log(L)/log(b_))-1;
     
     // initialize Ising model at K
     IsingModel* pIsing = new IsingModel(K);
@@ -152,94 +152,100 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
     // containers
     double SL, SL_avg, SL_avg_loc;
     double SS, SS_avg, SS_avg_loc;
-    double SLb, SLb_avg, SLb_avg_loc;
-    double SSb, SSb_avg, SSb_avg_loc;
-    double SLb_SL_avg, SLb_SL_avg_loc;
-    double SSb_SS_avg, SSb_SS_avg_loc;
+    double SLb, SSb;
+    vec SLb_avg(n_transformations);
+    vec SSb_avg(n_transformations);
+    vec SLb_SL_avg(n_transformations);
+    vec SSb_SS_avg(n_transformations);
+    vec SLb_avg_loc(n_transformations);
+    vec SSb_avg_loc(n_transformations);
+    vec SLb_SL_avg_loc(n_transformations);
+    vec SSb_SS_avg_loc(n_transformations);
     Lattice* pLatticeLb = NULL;
     Lattice* pLatticeSb = NULL;
-    vec2D Kc;
     
-    for(int n = 0; n <= n_transformations; ++n){
+    // set local sums to zero
+    SL_avg_loc = 0.0;
+    SS_avg_loc = 0.0;
+    SLb_avg_loc.setZero();
+    SSb_avg_loc.setZero();
+    SLb_SL_avg_loc.setZero();
+    SSb_SS_avg_loc.setZero();
+    
+    if(rank_ == 0) printf("Sampling...\n");
+    for(int samples = 0; samples < n_samples_loc; ++samples){
         
-        // calculate correlation functions
-        SL_avg_loc = 0.0;
-        SS_avg_loc = 0.0;
-        SLb_avg_loc = 0.0;
-        SSb_avg_loc = 0.0;
-        SLb_SL_avg_loc = 0.0;
-        SSb_SS_avg_loc = 0.0;
+        // get new configurations
+        pIsing->sample_new_configuration(pLatticeL);
+        pIsing->sample_new_configuration(pLatticeS);
         
-        if(rank_ == 0) printf("Sampling...\n");
-        for(int samples = 0; samples < n_samples_loc; ++samples){
+        // calculate nearest neighbor interactions
+        SL = pLatticeL->calc_nearest_neighbor_interaction();
+        SS = pLatticeS->calc_nearest_neighbor_interaction();
+        
+        // add up values for averages
+        SL_avg_loc += SL;
+        SS_avg_loc += SS;
+        
+        // apply 1 transformation to larger lattice
+        pLatticeLb = block_spin_transformation(pLatticeL);
+        pLatticeSb = pLatticeS;
+        
+        // apply n transformations to both lattices
+        for(int n = 0; n < n_transformations; ++n){
             
-            // get new configurations
-            pIsing->sample_new_configuration(pLatticeL);
-            pIsing->sample_new_configuration(pLatticeS);
-
-            // apply n+1 transformations to large lattice sample
-            pLatticeLb = block_spin_transformation(pLatticeL, n+1);
-            
-            // apply n transformations to small lattice sample
-            pLatticeSb = block_spin_transformation(pLatticeS, n);
+            pLatticeLb = block_spin_transformation(pLatticeLb);
+            pLatticeSb = block_spin_transformation(pLatticeSb);
             
             // calculate nearest neighbor interactions
-            SL = pLatticeL->calc_nearest_neighbor_interaction();
-            SS = pLatticeS->calc_nearest_neighbor_interaction();
             SLb = pLatticeLb->calc_nearest_neighbor_interaction();
             SSb = pLatticeSb->calc_nearest_neighbor_interaction();
-                        
-            // add up values for averages
-            SL_avg_loc += SL;
-            SLb_avg_loc += SLb;
-            SS_avg_loc += SS;
-            SSb_avg_loc += SSb;
-            SLb_SL_avg_loc += SLb*SL;
-            SSb_SS_avg_loc += SSb*SS;
             
+            // add up values for averages
+            SLb_avg_loc(n) += SLb;
+            SSb_avg_loc(n) += SSb;
+            SLb_SL_avg_loc(n) += SLb*SL;
+            SSb_SS_avg_loc(n) += SSb*SS;
         }
+    }
+    
+    MPI_Allreduce(&SL_avg_loc, &SL_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&SS_avg_loc, &SS_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(SLb_avg_loc.data(), SLb_avg.data(), n_transformations, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(SSb_avg_loc.data(), SSb_avg.data(), n_transformations, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(SLb_SL_avg_loc.data(), SLb_SL_avg.data(), n_transformations, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(SSb_SS_avg_loc.data(), SSb_SS_avg.data(), n_transformations, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    
+    SL_avg /= n_samples;
+    SS_avg /= n_samples;
+    SLb_avg /= n_samples;
+    SSb_avg /= n_samples;
+    SLb_SL_avg /= n_samples;
+    SSb_SS_avg /= n_samples;
+    
+    // calculate distance to critical point for various blocking levels
+    vec2D Kc;
+    double dK1, dSL_dK, dSS_dK;
+    for(int n = 0; n < n_transformations; ++n){
         
-        MPI_Allreduce(&SL_avg_loc, &SL_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(&SLb_avg_loc, &SLb_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(&SS_avg_loc, &SS_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(&SSb_avg_loc, &SSb_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(&SLb_SL_avg_loc, &SLb_SL_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(&SSb_SS_avg_loc, &SSb_SS_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        
-        SL_avg /= n_samples;
-        SLb_avg /= n_samples;
-        SS_avg /= n_samples;
-        SSb_avg /= n_samples;
-        SLb_SL_avg /= n_samples;
-        SSb_SS_avg /= n_samples;
-        
-        double dSL_dK = SLb_SL_avg - SLb_avg * SL_avg;
-        double dSS_dK = SSb_SS_avg - SSb_avg * SS_avg;
-        double dK1 = (SLb_avg - SSb_avg) / (dSL_dK - dSS_dK);
+        dSL_dK = SLb_SL_avg(n) - SLb_avg(n) * SL_avg;
+        dSS_dK = SSb_SS_avg(n) - SSb_avg(n) * SS_avg;
+        dK1 = (SLb_avg(n) - SSb_avg(n)) / (dSL_dK - dSS_dK);
         Kc = K;
         Kc(0) -= dK1;
         
         if(rank_ == 0){
-            printf("n = %i: Approximate Kc = ", n);
+            
+            printf("n = %i: Kc = ", n);
             print_vec2D(Kc);
             printf("\n");
         }
-
     }
- 
+    
+    // return result for largest n
     return Kc;
 }
 
-
-Lattice* MonteCarloRenormalizationGroup::block_spin_transformation(Lattice* pLattice, int n){
-    
-    Lattice* pLatticeb = block_spin_transformation(pLattice);
-    for(int i = 1; i < n; ++i){
-        pLatticeb = block_spin_transformation(pLatticeb);
-    }
-    
-    return pLatticeb;
-}
 
 
 Lattice* MonteCarloRenormalizationGroup::block_spin_transformation(Lattice* pLattice){

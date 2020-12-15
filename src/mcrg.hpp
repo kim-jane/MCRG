@@ -29,9 +29,9 @@ public:
     vec2D approx_critical_point(int n_samples_eq,
                                 int n_samples,
                                 int L,
-                                vec2D K);
+                                vec2D K,
+                                FILE* fptr);
     
-    Lattice* block_spin_transformation(Lattice* pLattice, int n);
     Lattice* block_spin_transformation(Lattice* pLattice);
     int split_samples(int n_samples);
 };
