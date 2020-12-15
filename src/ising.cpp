@@ -117,6 +117,17 @@ void IsingModel::sample_new_configuration(std::shared_ptr<Lattice> pLattice){
     do{
         cluster_grew = grow_cluster(pLattice);
     }while(cluster_grew == true && cluster_.size() > 0);
+    
+    // if cluster is not empty, flip entire cluster
+    if(cluster_.size() > 0){
+        for(int c = 0; c < cluster_.size(); ++c){
+
+            k = cluster_[c];
+            i = ((k%pLattice->N_)+pLattice->N_)%pLattice->N_;
+            j = floor((double)k/pLattice->N_);
+            pLattice->spins_(i,j) *= -1;
+        }
+    }
 }
 
 
