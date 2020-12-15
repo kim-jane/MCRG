@@ -105,9 +105,6 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
     vec2D K = K0;
     for(int i = 1; i <= n_iterations; ++i){
         
-        // start on K1-axis always
-        K(1) = 0.0;
-        
         if(rank_ == 0){
             printf("\nIteration %i: \n", i);
             fprintf(fptr, "%15i, %15.10lf, %15.10lf, ", i, K(0), K(1));
@@ -184,10 +181,7 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
             // get new configurations
             pIsing->sample_new_configuration(pLatticeL);
             pIsing->sample_new_configuration(pLatticeS);
-            
-            
 
-            
             // apply n+1 transformations to large lattice sample
             pLatticeLb = block_spin_transformation(pLatticeL, n+1);
             
@@ -287,6 +281,7 @@ Lattice* MonteCarloRenormalizationGroup::block_spin_transformation(Lattice* pLat
     }
     
     Lattice* pLatticeb = new Lattice(pLattice->a_*b_, block_spins);
+    pLatticeb->display_spins();
 
     return pLatticeb;
 }
