@@ -138,7 +138,7 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
     
     if(rank_ == 0){
         
-        printf("* Critical exponent: nu = %lf\n", nu);
+        printf("\n* Critical exponent: nu = %lf\n", nu);
         fclose(fptr_);
     }
 }
@@ -179,7 +179,7 @@ double MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
     // print results
     if(rank_ == 0){
 
-        printf("* Critical point: Kc = %lf\n", K);
+        printf("\n* Critical point: Kc = %lf\n", K);
         printf("* Critical temperature: Tc = %lf\n", -1.0/K);
         fclose(fptr_);
     }
