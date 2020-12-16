@@ -245,8 +245,9 @@ double MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
         SL_avg_loc += SL;
         SS_avg_loc += SS;
         
-        // apply 1 transformation to larger lattice
-        pLatticeLb = block_spin_transformation(pLatticeL);
+        // apply 1 extra transformation to larger lattice
+        pLatticeL = block_spin_transformation(pLatticeL);
+        pLatticeLb = pLatticeL;
         pLatticeSb = pLatticeS;
         
         // apply n transformations to both lattices

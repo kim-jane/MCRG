@@ -13,7 +13,7 @@ int main(){
     double Kc = -log(1+sqrt(2))/2;
 
     MonteCarloRenormalizationGroup MCRG(b);
-    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, Kc);
+    //MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, Kc);
     
     double Kc_N = MCRG.locate_critical_point(n_iterations, n_samples_eq, n_samples, N, Kc);
     MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, Kc_N);
