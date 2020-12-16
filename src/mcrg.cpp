@@ -162,7 +162,7 @@ double MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
         fprintf(fptr_, "# Number of parallel processes = %i\n", n_processes_);
         fprintf(fptr_, "# Number of equilibration samples = %i\n", n_samples_eq);
         fprintf(fptr_, "# Number of samples = %i\n", n_samples);
-        fprintf(fptr_, "# %13s  %15s  %15s  %15s\n",
+        fprintf(fptr_, "# %23s  %25s  %25s  %25s\n",
                 "Iteration", "Blocking Level n", "Starting K","Approximate Kc");
     }
     
@@ -297,7 +297,7 @@ double MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
         if(rank_ == 0){
             
             printf("n = %i: Kc = %lf\n", n, Kc);
-            fprintf(fptr_, "%15i, %15i, %15.10lf, %15.10lf\n", iter_, n, K, Kc);
+            fprintf(fptr_, "%25i, %25i, %25.10lf, %25.10lf\n", iter_, n, K, Kc);
         }
     }
     
