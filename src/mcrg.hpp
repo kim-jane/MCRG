@@ -18,11 +18,11 @@ public:
                                 int N,
                                 double K);
 
-    void locate_critical_point(int n_iterations,
-                                int n_samples_eq,
-                                int n_samples,
-                                int L,
-                                double K0);
+    double locate_critical_point(int n_iterations,
+                                 int n_samples_eq,
+                                 int n_samples,
+                                 int L,
+                                 double K0);
     
 private:
     

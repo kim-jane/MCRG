@@ -26,7 +26,7 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
     // open file
     if(rank_ == 0){
         
-        printf("* Calculating critical exponent at K = %lf\n", K);
+        printf("* Calculating critical exponent at K = %lf\n\n", K);
         
         std::string filename = "critical_exponent_N_"+std::to_string(N)
                                +"_K_"+get_rounded_str(K)+".txt";
@@ -129,8 +129,10 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
         else lambda = lambda2;
         nu = log(lambda)/log(b_);
         
-        if(rank_ == 0) printf("n = %i: lambda = %lf, nu = %lf\n", n, lambda, nu);
-        fprintf(fptr_, "%25i, %25.10lf, %25.10lf\n", n, lambda, nu);
+        if(rank_ == 0){
+            printf("n = %i: lambda = %lf, nu = %lf\n", n, lambda, nu);
+            fprintf(fptr_, "%25i, %25.10lf, %25.10lf\n", n, lambda, nu);
+        }
     }
     
     if(rank_ == 0){
@@ -138,11 +140,11 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
     }
 }
 
-void MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
-                                                           int n_samples_eq,
-                                                           int n_samples,
-                                                           int L,
-                                                           double K0){
+double MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
+                                                             int n_samples_eq,
+                                                             int n_samples,
+                                                             int L,
+                                                             double K0){
     if(rank_ == 0){
         
         // print starting point
@@ -178,6 +180,8 @@ void MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
         printf("* Critical temperature: Tc = %lf\n", -1.0/K);
         fclose(fptr_);
     }
+    
+    double K;
 }
 
 
