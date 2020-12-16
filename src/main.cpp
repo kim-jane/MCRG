@@ -8,7 +8,7 @@ int main(){
     int b = 2;
     int N = 64;
     int n_samples_eq = 1E4;
-    int n_samples = 1E7;
+    int n_samples = 1E6;
     int n_iterations = 10;
     double Kc = -log(1+sqrt(2))/2;
 
