@@ -181,7 +181,7 @@ double MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
         fclose(fptr_);
     }
     
-    double K;
+    return K;
 }
 
 
