@@ -252,10 +252,6 @@ double MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
         // apply n transformations to both lattices
         for(int n = 0; n < n_transformations; ++n){
             
-            // transform
-            pLatticeLb = block_spin_transformation(pLatticeLb);
-            pLatticeSb = block_spin_transformation(pLatticeSb);
-            
             // calculate nearest neighbor interactions
             SLb = pLatticeLb->calc_nearest_neighbor_interaction();
             SSb = pLatticeSb->calc_nearest_neighbor_interaction();
@@ -265,6 +261,13 @@ double MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
             SSb_avg_loc(n) += SSb;
             SLb_SL_avg_loc(n) += SLb*SL;
             SSb_SS_avg_loc(n) += SSb*SS;
+            
+            if(n < n_transformations-1){
+                
+                // transform
+                pLatticeLb = block_spin_transformation(pLatticeLb);
+                pLatticeSb = block_spin_transformation(pLatticeSb);
+            }
         }
     }
     
