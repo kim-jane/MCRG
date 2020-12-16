@@ -11,14 +11,17 @@ int main(){
     int n_samples = 1E6;
     int n_iterations = 10;
     //double Kc = -0.40;
-    double Kc = -log(1+sqrt(2))/2;
+    //double Kc = -log(1+sqrt(2))/2;
 
     MonteCarloRenormalizationGroup MCRG(b);
     
-    Kc = MCRG.locate_critical_point(n_iterations, n_samples_eq, n_samples, N, Kc);
+    //Kc = MCRG.locate_critical_point(n_iterations, n_samples_eq, n_samples, N, Kc);
    
+    
+    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.4408896814);
+    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.4407842764);
+    
     /*
-    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, Kc);
     MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.430);
     MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.435);
     MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.440);
