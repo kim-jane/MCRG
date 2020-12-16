@@ -9,7 +9,7 @@ int main(){
     int N = 32;
     int n_samples_eq = 1E4;
     int n_samples = 1E6;
-    int n_iterations = 100;
+    int n_iterations = 1000;
     double Kc = -log(1+sqrt(2))/2;
 
     MonteCarloRenormalizationGroup MCRG(b);
