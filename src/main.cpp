@@ -6,7 +6,7 @@ int main(){
     MPI_Init(NULL, NULL);
     
     int b = 2;
-    int N = 64;
+    int N = 128;
     int n_samples_eq = 1E4;
     int n_samples = 1E6;
     int n_iterations = 20;
