@@ -90,7 +90,7 @@ void IsingModel::sample_new_configuration(std::shared_ptr<Lattice> pLattice){
     // add spins to cluster until cluster stops growing (becomes empty)
     do{
         grow_cluster(pLattice);
-    }while(cluster_grew_ == true && cluster_.size() > 0);
+    }while(cluster_grew_ == true);
 }
 
 
