@@ -109,7 +109,8 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
     
     // calculate RG eigenvalues at various blocking levels
     mat2D dSb_dK, dSb_dKb, T;
-    double lambda, lambda1, lambda2, nu;
+    double lambda, lambda1, lambda2;
+    double nu = 0.0;
     for(int n = 0; n < n_transformations; ++n){
         
         Sb_S_flattened = Sb_S_avg.row(n);
