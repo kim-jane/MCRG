@@ -40,7 +40,7 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
     }
     
     int n_samples_loc = split_samples(n_samples);
-    int n_transformations = floor(log(N)/log(b_));
+    int n_transformations = floor(log(N)/log(b_))-1;
 
     // initialize Ising model at K
     std::unique_ptr<IsingModel> pIsing(new IsingModel(K));
@@ -136,6 +136,8 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
     }
     
     if(rank_ == 0){
+        
+        printf("* Critical exponent: nu = %lf\n", nu);
         fclose(fptr_);
     }
 }
