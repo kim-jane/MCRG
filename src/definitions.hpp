@@ -18,10 +18,9 @@ using mat2D = Matrix<double, 2, 2>;
 using vec = Matrix<double, Dynamic, 1>;
 using ivec = Matrix<int, Dynamic, 1>;
 using vec2D = Matrix<double, 2, 1>;
-using vec4D = Matrix<double, 4, 1>;
 
-extern vec4D flatten(mat2D M);
-extern mat2D unflatten(vec4D v);
+extern vec flatten(mat M);
+extern mat unflatten(vec v);
 
 
 // random number generators
@@ -40,8 +39,5 @@ inline auto rand_unif(){
 
 extern void display_spin_up();
 extern void display_spin_down();
-extern void print_bold(std::string message);
-extern void print_error(std::string message);
-extern void print_vec2D(vec2D v);
 extern bool write_iter(int i);
 extern std::string get_rounded_str(double num);

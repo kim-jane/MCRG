@@ -5,19 +5,27 @@ std::mt19937_64 rng(rd());
 std::uniform_int_distribution<int> binary(0,1);
 std::uniform_real_distribution<double> unif(0.0,1.0);
 
-vec4D flatten(mat2D M){
+vec flatten(mat M){
     
-    vec4D v;
-    v.head(2) = M.col(0);
-    v.tail(2) = M.col(1);
+    int n = M.cols();
+    vec v(n*n);
+    
+    for(int j = 0; j < n; ++j){
+        v.segment(j*n, n) = M.col(j);
+    }
+    
     return v;
 }
 
-mat2D unflatten(vec4D v){
+mat unflatten(vec v){
     
-    mat2D M;
-    M.col(0) = v.head(2);
-    M.col(1) = v.tail(2);
+    int n = floor(sqrt(v.size()));
+    mat M(n,n);
+    
+    for(int j = 0; j < n; ++j){
+        M.col(j) = v.segment(j*n, n);
+    }
+    
     return M;
 }
 
@@ -30,21 +38,6 @@ void display_spin_up(){
 void display_spin_down(){
     
     printf("\033[37m%2s\033[0m", "X");
-}
-
-void print_bold(std::string message){
-    
-    printf("\033[1;37m%2s\033[0m", message.c_str());
-}
-
-void print_error(std::string message){
-    
-    printf("\033[1;31mERROR: %2s\033[0m\n", message.c_str());
-}
-
-void print_vec2D(vec2D v){
-    
-    printf("(%.7lf, %.7lf)\n", v(0), v(1));
 }
 
 bool write_iter(int i){

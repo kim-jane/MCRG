@@ -10,7 +10,10 @@ Lattice::Lattice(int N){
     n_spins_ = N_*N_;
     rand_spin_index_ = std::uniform_int_distribution<int>(0, n_spins_-1);
     initialize_random_spins();
+    nn_.resize(4,2);
+    nnn_.resize(4,2);
 }
+
 
 Lattice::Lattice(int a, imat spins){
     
@@ -22,7 +25,10 @@ Lattice::Lattice(int a, imat spins){
     N_ = spins_.rows();
     n_spins_ = N_*N_;
     rand_spin_index_ = std::uniform_int_distribution<int>(0, n_spins_-1);
+    nn_.resize(4,2);
+    nnn_.resize(4,2);
 }
+
 
 void Lattice::initialize_random_spins(){
     
@@ -53,85 +59,94 @@ void Lattice::display_spins(){
     }
 }
 
+
+void Lattice::write_spins(FILE* fptr){
+    
+    if(rank_ == 0){
+        fprintf(fptr, "\n");
+        for(int i = 0; i < N_; ++i){
+            fprintf(fptr, "# ");
+            for(int j = 0; j < N_; ++j){
+                fprintf(fptr, "%i, ", spins_(i,j));
+            }
+            fprintf(fptr, "\n");
+        }
+    }
+}
+
+
 int Lattice::choose_random_spin(){
     
     return rand_spin_index_(rng);
 }
 
+
 double Lattice::calc_nearest_neighbor_interaction(){
     
-    double Snn = 0;
-    imat nn;
-    
+    Snn_ = 0.0;
     for(int i = 0; i < N_; ++i){
         for(int j = 0; j < N_; ++j){
             
-            nn = nearest_neighbors(i,j);
+            nn_ = nearest_neighbors(i,j);
             
             for(int k = 0; k < 4; ++k){
-                Snn += spins_(i,j)*spins_(nn(k,0),nn(k,1));
+                Snn_ += spins_(i,j)*spins_(nn_(k,0),nn_(k,1));
             }
         }
     }
     
-    return Snn;
+    return Snn_;
 }
 
 
 vec2D Lattice::calc_interactions(){
     
-    vec2D S;
-    S.setZero();
-    imat nn, nnn;
+    S_.setZero();
     
     for(int i = 0; i < N_; ++i){
         for(int j = 0; j < N_; ++j){
             
-            nn = nearest_neighbors(i,j);
-            nnn = next_nearest_neighbors(i,j);
+            nn_ = nearest_neighbors(i,j);
+            nnn_ = next_nearest_neighbors(i,j);
             
             for(int k = 0; k < 4; ++k){
-                S(0) += spins_(i,j)*spins_(nn(k,0),nn(k,1));
-                S(1) += spins_(i,j)*spins_(nnn(k,0),nnn(k,1));
+                S_(0) += spins_(i,j)*spins_(nn_(k,0),nn_(k,1));
+                S_(1) += spins_(i,j)*spins_(nnn_(k,0),nnn_(k,1));
             }
         }
     }
     
-    return S;
+    return S_;
 }
 
 
 
 imat Lattice::nearest_neighbors(int i, int j){
     
-    imat nn(4,2);
-
-    nn(0,0) = ((i+1)%N_+N_)%N_;
-    nn(0,1) = j;
-    nn(1,0) = ((i-1)%N_+N_)%N_;
-    nn(1,1) = j;
-    nn(2,0) = i;
-    nn(2,1) = ((j+1)%N_+N_)%N_;
-    nn(3,0) = i;
-    nn(3,1) = ((j-1)%N_+N_)%N_;
+    nn_(0,0) = ((i+1)%N_+N_)%N_;
+    nn_(0,1) = j;
+    nn_(1,0) = ((i-1)%N_+N_)%N_;
+    nn_(1,1) = j;
+    nn_(2,0) = i;
+    nn_(2,1) = ((j+1)%N_+N_)%N_;
+    nn_(3,0) = i;
+    nn_(3,1) = ((j-1)%N_+N_)%N_;
     
-    return nn;
+    return nn_;
 }
 
 
 imat Lattice::next_nearest_neighbors(int i, int j){
     
-    imat nnn(4,2);
+    nnn_(0,0) = ((i+1)%N_+N_)%N_;
+    nnn_(0,1) = ((j+1)%N_+N_)%N_;
+    nnn_(1,0) = ((i-1)%N_+N_)%N_;
+    nnn_(1,1) = ((j+1)%N_+N_)%N_;
+    nnn_(2,0) = ((i+1)%N_+N_)%N_;
+    nnn_(2,1) = ((j-1)%N_+N_)%N_;
+    nnn_(3,0) = ((i-1)%N_+N_)%N_;
+    nnn_(3,1) = ((j-1)%N_+N_)%N_;
     
-    nnn(0,0) = ((i+1)%N_+N_)%N_;
-    nnn(0,1) = ((j+1)%N_+N_)%N_;
-    nnn(1,0) = ((i-1)%N_+N_)%N_;
-    nnn(1,1) = ((j+1)%N_+N_)%N_;
-    nnn(2,0) = ((i+1)%N_+N_)%N_;
-    nnn(2,1) = ((j-1)%N_+N_)%N_;
-    nnn(3,0) = ((i-1)%N_+N_)%N_;
-    nnn(3,1) = ((j-1)%N_+N_)%N_;
-    
-    return nnn;
+    return nnn_;
 }
 

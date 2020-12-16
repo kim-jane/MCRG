@@ -3,7 +3,7 @@
 MonteCarloRenormalizationGroup::MonteCarloRenormalizationGroup(int b){
     
     b_ = b;
-    
+    fptr_ = NULL;
     MPI_Comm_size(MPI_COMM_WORLD, &n_processes_);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
     
@@ -22,23 +22,25 @@ MonteCarloRenormalizationGroup::MonteCarloRenormalizationGroup(int b){
 void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
                                                             int n_samples,
                                                             int N,
-                                                            vec2D K){
+                                                            double K){
     // open file
-    FILE* fptr = NULL;
     if(rank_ == 0){
         
-        print_bold("* Calculating critical exponent at K = ");
-        print_vec2D(K);
+        printf("* Calculating critical exponent at K = %lf\n", K);
         
         std::string filename = "critical_exponent_N_"+std::to_string(N)
-                               +"_K1_"+get_rounded_str(K(0))
-                               +"_K2_"+get_rounded_str(K(1))+".txt";
-        fptr = fopen(filename.c_str(), "w");
-        fprintf(fptr, "# %23s  %25s\n", "Blocking Level n", "Critical Exponent nu");
+                               +"_K_"+get_rounded_str(K)+".txt";
+        fptr_ = fopen(filename.c_str(), "w");
+        
+        fprintf(fptr_, "# Number of parallel processes = %i\n", n_processes_);
+        fprintf(fptr_, "# Number of equilibration samples = %i\n", n_samples_eq);
+        fprintf(fptr_, "# Number of samples = %i\n", n_samples);
+        fprintf(fptr_, "# %23s  %25s  %25s\n",
+                "Blocking Level n", "Largest Eigenvalue", "Critical Exponent nu");
     }
     
     int n_samples_loc = split_samples(n_samples);
-    int n_transformations = floor(log(N)/log(b_))-1;
+    int n_transformations = floor(log(N)/log(b_));
 
     // initialize Ising model at K
     std::unique_ptr<IsingModel> pIsing(new IsingModel(K));
@@ -48,9 +50,9 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
     pIsing->equilibrate(pLattice, n_samples_eq, false);
     
     // containers
-    vec2D S_vec, Sb_vec;
-    vec4D Sb_S_flattened, Sb_Sb_flattened;
-    mat2D Sb_S, Sb_Sb;
+    vec S_vec, Sb_vec;
+    vec Sb_S_flattened, Sb_Sb_flattened;
+    mat Sb_S, Sb_Sb;
     mat S(n_transformations+1,2);
     mat S_avg(n_transformations+1,2);
     mat Sb_S_avg(n_transformations,4);
@@ -107,7 +109,7 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
     
     // calculate RG eigenvalues at various blocking levels
     mat2D dSb_dK, dSb_dKb, T;
-    double lambda, lambda1, lambda2;
+    double lambda, lambda1, lambda2, nu;
     for(int n = 0; n < n_transformations; ++n){
         
         Sb_S_flattened = Sb_S_avg.row(n);
@@ -125,41 +127,42 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
         lambda2 = solver.eigenvalues()(1).real();
         if(lambda1 > lambda2) lambda = lambda1;
         else lambda = lambda2;
+        nu = log(lambda)/log(b_);
         
-        if(rank_ == 0) printf("n = %i: lambda = %lf\n", n, lambda);
+        if(rank_ == 0) printf("n = %i: lambda = %lf, nu = %lf\n", n, lambda, nu);
+        fprintf(fptr_, "%25i, %25.10lf, %25.10lf\n", n, lambda, nu);
     }
     
     if(rank_ == 0){
-        fclose(fptr);
+        fclose(fptr_);
     }
 }
 
-vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
-                                                            int n_samples_eq,
-                                                            int n_samples,
-                                                            int L,
-                                                            vec2D K0){
-    fptr_ = NULL;
+void MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
+                                                           int n_samples_eq,
+                                                           int n_samples,
+                                                           int L,
+                                                           double K0){
     if(rank_ == 0){
         
         // print starting point
-        printf("* Locating critical point starting from K0 = ");
-        print_vec2D(K0);
+        printf("* Locating critical point starting from K0 = %lf\n", K0);
     
         // open file
         std::string filename = "critical_point_L_"+std::to_string(L)
-                               +"_K1_"+get_rounded_str(K0(0))+".txt";
+                               +"_K_"+get_rounded_str(K0)+".txt";
         fptr_ = fopen(filename.c_str(), "w");
         
         // headings
         fprintf(fptr_, "# Number of parallel processes = %i\n", n_processes_);
         fprintf(fptr_, "# Number of equilibration samples = %i\n", n_samples_eq);
         fprintf(fptr_, "# Number of samples = %i\n", n_samples);
-        fprintf(fptr_, "# %13s  %15s  %15s\n", "Iteration", "Blocking Level n", "K1");
+        fprintf(fptr_, "# %13s  %15s  %15s  %15s\n",
+                "Iteration", "Blocking Level n", "Starting K","Approximate Kc");
     }
     
     // iteratively approach critical point
-    vec2D K = K0;
+    double K = K0;
     for(iter_ = 1; iter_ <= n_iterations; ++iter_){
         
         if(rank_ == 0) printf("\nIteration %i:\n", iter_);
@@ -171,20 +174,17 @@ vec2D MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
     // print results
     if(rank_ == 0){
 
-        printf("* Critical point: Kc = ");
-        print_vec2D(K);
-        printf("* Critical temperature: Tc = %.5lf\n", -1.0/K(0));
+        printf("* Critical point: Kc = %lf\n", K);
+        printf("* Critical temperature: Tc = %lf\n", -1.0/K);
         fclose(fptr_);
     }
-
-    return K;
 }
 
 
-vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
-                                                            int n_samples,
-                                                            int L,
-                                                            vec2D K){
+double MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
+                                                             int n_samples,
+                                                             int L,
+                                                             double K){
     int n_samples_loc = split_samples(n_samples);
     int n_transformations = floor(log(L)/log(b_))-2;
     
@@ -278,21 +278,18 @@ vec2D MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
     SSb_SS_avg /= n_samples;
     
     // calculate distance to critical point for various blocking levels
-    vec2D Kc;
-    double dK1, dSL_dK, dSS_dK;
+    double Kc, dK, dSL_dK, dSS_dK;
     for(int n = 0; n < n_transformations; ++n){
         
         dSL_dK = SLb_SL_avg(n) - SLb_avg(n) * SL_avg;
         dSS_dK = SSb_SS_avg(n) - SSb_avg(n) * SS_avg;
-        dK1 = (SLb_avg(n) - SSb_avg(n)) / (dSL_dK - dSS_dK);
-        Kc = K;
-        Kc(0) -= dK1;
+        dK = (SLb_avg(n) - SSb_avg(n)) / (dSL_dK - dSS_dK);
+        Kc = K-dK;
         
         if(rank_ == 0){
             
-            printf("n = %i: Kc = ", n);
-            print_vec2D(Kc);
-            fprintf(fptr_, "%15i, %15i, %15.10lf\n", iter_, n, Kc(0));
+            printf("n = %i: Kc = %lf\n", n, Kc);
+            fprintf(fptr_, "%15i, %15i, %15.10lf, %15.10lf\n", iter_, n, K, Kc);
         }
     }
     
@@ -334,7 +331,6 @@ std::shared_ptr<Lattice> MonteCarloRenormalizationGroup::block_spin_transformati
     }
     
     std::shared_ptr<Lattice> pLatticeb(new Lattice(pLattice->a_*b_, block_spins));
-    //Lattice* pLatticeb = new Lattice(pLattice->a_*b_, block_spins);
 
     return pLatticeb;
 }

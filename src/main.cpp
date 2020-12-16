@@ -5,16 +5,16 @@ int main(){
     
     MPI_Init(NULL, NULL);
     
-    
     int b = 2;
-    vec2D Kc;
-    Kc(0) = -0.44;
-    Kc(1) = 0.0;
-     
+    int N = 32;
+    int n_samples_eq = 1E4;
+    int n_samples = 1E6;
+    int n_iterations = 10;
+    double K = -0.44;
 
     MonteCarloRenormalizationGroup MCRG(b);
-    //Kc = MCRG.locate_critical_point(100, 1E4, 1E6, 64, Kc);
-    MCRG.calc_critical_exponent(1E4, 1E6, 64, Kc);
+    MCRG.locate_critical_point(n_iterations, n_samples_eq, n_samples, N, K);
+    MCRG.calc_critical_exponent(1E4, 1E6, 64, K);
     
     MPI_Finalize();
     return 0;
