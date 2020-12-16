@@ -278,7 +278,8 @@ double MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
     SSb_SS_avg /= n_samples;
     
     // calculate distance to critical point for various blocking levels
-    double Kc, dK, dSL_dK, dSS_dK;
+    double Kc = 0;
+    double dK, dSL_dK, dSS_dK;
     for(int n = 0; n < n_transformations; ++n){
         
         dSL_dK = SLb_SL_avg(n) - SLb_avg(n) * SL_avg;
