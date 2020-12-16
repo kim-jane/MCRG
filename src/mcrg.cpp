@@ -207,9 +207,6 @@ double MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
     std::shared_ptr<Lattice> pLatticeS(new Lattice(S));
     pIsing->equilibrate(pLatticeS, n_samples_eq, false);
     
-    // apply 1 extra transformation to larger lattice
-    pLatticeL = block_spin_transformation(pLatticeL);
-    
     // containers
     double SL, SL_avg, SL_avg_loc;
     double SS, SS_avg, SS_avg_loc;
@@ -248,9 +245,11 @@ double MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
         SL_avg_loc += SL;
         SS_avg_loc += SS;
         
-        // apply n transformations to both lattices
-        pLatticeLb = pLatticeL;
+        // apply 1 transformation to larger lattice
+        pLatticeLb = block_spin_transformation(pLatticeL);
         pLatticeSb = pLatticeS;
+        
+        // apply n transformations to both lattices
         for(int n = 0; n < n_transformations; ++n){
             
             // transform
