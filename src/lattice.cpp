@@ -116,7 +116,7 @@ vec2D Lattice::calc_interactions(){
         }
     }
     
-    return S_/4.0;
+    return S_;
 }
 
 

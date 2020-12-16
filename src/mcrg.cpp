@@ -295,7 +295,7 @@ double MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
         dSL_dK = SLb_SL_avg(n) - SLb_avg(n) * SL_avg;
         dSS_dK = SSb_SS_avg(n) - SSb_avg(n) * SS_avg;
         dK = (SLb_avg(n) - SSb_avg(n)) / (dSL_dK - dSS_dK);
-        Kc = K-dK;
+        Kc = K+dK;
         
         if(rank_ == 0){
             
