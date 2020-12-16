@@ -16,18 +16,17 @@ int main(){
     MonteCarloRenormalizationGroup MCRG(b);
     
     //Kc = MCRG.locate_critical_point(n_iterations, n_samples_eq, n_samples, N, Kc);
-   
-    
-    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.4408896814);
-    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.4407842764);
-    
-    /*
-    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.430);
-    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.435);
-    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.440);
-    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.445);
-    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.450);
-    */
+
+    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.4401);
+    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.4402);
+    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.4403);
+    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.4404);
+    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.4405);
+    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.4406);
+    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.4407);
+    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.4408);
+    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, -0.4409);
+
     //double Kc_N = MCRG.locate_critical_point(n_iterations, n_samples_eq, n_samples, N, Kc);
     //MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, Kc_N);
     
