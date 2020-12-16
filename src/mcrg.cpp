@@ -193,7 +193,7 @@ double MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
                                                              int L,
                                                              double K){
     int n_samples_loc = split_samples(n_samples);
-    int n_transformations = floor(log(L)/log(b_))-1;
+    int n_transformations = floor(log(L)/log(b_))-2;
     
     // initialize Ising model at K
     std::unique_ptr<IsingModel> pIsing(new IsingModel(K));
