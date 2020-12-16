@@ -15,9 +15,15 @@ int main(){
 
     MonteCarloRenormalizationGroup MCRG(b);
     
-    Kc_N = MCRG.locate_critical_point(n_iterations, n_samples_eq, n_samples, N, K0);
-    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, Kc_N);
+    // calc thermal exponent at critical coupling for N->inf
     MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, Kc);
+    
+    // locate critical point for finite N
+    double Kc_N = MCRG.locate_critical_point(n_iterations, n_samples_eq, n_samples, N, K0);
+    
+    // calc thermal exponent at critical point
+    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, Kc_N);
+    
     
     MPI_Finalize();
     return 0;
