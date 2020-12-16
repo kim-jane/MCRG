@@ -7,7 +7,7 @@ int main(){
     
     int b = 2;
     int N = 64;
-    int n_samples_eq = 1E5;
+    int n_samples_eq = 1E4;
     int n_samples = 1E7;
     int n_iterations = 100;
     double K0 = -0.40;
