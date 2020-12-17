@@ -24,6 +24,8 @@ for i in range(len(L)):
     avg = np.average(data[i][2][-n:])
     plt.hlines(avg, xmin=-10, xmax=100, linestyle="--", colors=colors[i], label=r"$K_1^c$ = "+str(round(avg,6)))
     
+    print("%i %.15f" % (L[i], avg))
+    
 plt.hlines(Kc, xmin=-10, xmax=100, colors='k', linestyle="--", label=r"Avg $K_1^c$ over last 50 iterations")
 
 plt.title(r"Locating critical nearest neighbor coupling $K_1^c$")
