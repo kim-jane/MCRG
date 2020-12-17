@@ -9,12 +9,12 @@ int main(){
     int N = 16;
     int n_samples_eq = 1E4;
     int n_samples = 1E7;
-    //double K = -0.44068277273;
+    double K = -0.440414806102000;
     double Kc = -log(1+sqrt(2))/2;
 
     MonteCarloRenormalizationGroup MCRG(b);
 
-    //MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, K);
+    MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, K);
     MCRG.calc_critical_exponent(n_samples_eq, n_samples, N, Kc);
     
     MPI_Finalize();
