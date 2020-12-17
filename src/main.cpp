@@ -6,10 +6,10 @@ int main(){
     MPI_Init(NULL, NULL);
     
     int b = 2;
-    int N = 16;
+    int N = 32;
     int n_samples_eq = 1E4;
     int n_samples = 1E7;
-    double K = -0.440414806102;
+    double K = -0.44061925954;
     double Kc = -log(1+sqrt(2))/2;
 
     MonteCarloRenormalizationGroup MCRG(b);
