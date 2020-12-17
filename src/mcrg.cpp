@@ -128,7 +128,7 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
         lambda2 = solver.eigenvalues()(1).real();
         if(lambda1 > lambda2) lambda = lambda1;
         else lambda = lambda2;
-        nu = log(lambda)/log(b_);
+        nu = log(b_)/log(lambda);
         
         if(rank_ == 0){
             printf("n = %i: lambda = %lf, nu = %lf\n", n, lambda, nu);
