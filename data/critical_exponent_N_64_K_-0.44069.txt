@@ -1,0 +1,9 @@
+# Number of parallel processes = 100
+# Number of equilibration samples = 10000
+# Number of samples = 1000000
+#        Blocking Level n         Largest Eigenvalue       Critical Exponent nu
+                        0,              1.9512647599,              0.9644095452
+                        1,              1.9968655223,              0.9977371787
+                        2,              1.9945542771,              0.9960663835
+                        3,              1.9941122493,              0.9957466218
+                        4,              2.0239481688,              1.0171723446
