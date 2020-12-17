@@ -10,7 +10,7 @@ int main(){
     int n_samples_eq = 1E4;
     int n_samples = 1E7;
     double K = -0.440414806102;
-    double Kc = -ln(1+sqrt(2))/2;
+    double Kc = -log(1+sqrt(2))/2;
 
     MonteCarloRenormalizationGroup MCRG(b);
 

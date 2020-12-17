@@ -69,7 +69,7 @@ bool write_iter(int i){
 std::string get_rounded_str(double num){
     
     std::stringstream ss;
-    ss << std::setprecision(5) << num;
+    ss << std::setprecision(7) << num;
     std::string str = ss.str();
     
     return str;
