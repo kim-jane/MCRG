@@ -120,7 +120,7 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
         
         dSb_dK = unflatten(Sb_S_flattened)-Sb_vec*S_vec.transpose();
         dSb_dKb = unflatten(Sb_Sb_flattened)-Sb_vec*Sb_vec.transpose();
-        T = dSb_dK * dSb_dKb.inverse();
+        T = dSb_dKb.inverse() * dSb_dK;
         
         // get largest eigenvalue
         EigenSolver<mat2D> solver(T);
