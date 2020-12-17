@@ -301,6 +301,7 @@ double MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
             
             printf("n = %i: Kc = %lf\n", n, Kc);
             fprintf(fptr_, "%25i, %25i, %25.10lf, %25.10lf\n", iter_, n, K, Kc);
+            fflush(fptr_);
         }
     }
     
