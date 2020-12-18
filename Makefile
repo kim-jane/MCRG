@@ -16,7 +16,7 @@ OBJECTS = build/definitions.o \
           build/mcrg.o \
           build/main.o
           
-          
+
 all: run
 
 
