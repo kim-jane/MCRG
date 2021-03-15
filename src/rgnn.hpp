@@ -20,7 +20,9 @@ public:
                int n_cycles,
                int n_samples,
                int n_samples_eq,
-               double T);
+               double T,
+               double h,
+               double eta);
     
     // forward-pass
     double predict_temperature(const imat& input_spins);

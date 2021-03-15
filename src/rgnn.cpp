@@ -21,11 +21,11 @@ void RenormalizationGroupNeuralNetwork::train(int N,
                                               int n_cycles,
                                               int n_samples,
                                               int n_samples_eq,
-                                              double T){
+                                              double T,
+                                              double h,
+                                              double eta){
     
     int n_samples_loc = split_samples(rank_, n_processes_, n_samples);
-    double h = 0.01;
-    double eta = 0.001;
     double T_pred, mse, mse_loc;
     mat grad(b_,b_);
     mat grad_loc(b_,b_);
@@ -69,7 +69,7 @@ void RenormalizationGroupNeuralNetwork::train(int N,
         grad /= n_samples;
         
         if(rank_ == 0){
-            std::cout << cycles << "\t" << T_pred_avg << "\t" << mse << "\t" << grad.norm() << std::endl;
+            printf("%10i %10.5lf %10.5lf %10.5lf\n", cycles, T_pred_avg, mse, grad.norm());
         }
         
         
