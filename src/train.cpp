@@ -13,8 +13,6 @@ int main(){
     double h = 0.01;
     double eta = 0.01;
     
-    std::cout << "T = " << Tc << std::endl << std::endl;
-    
     RenormalizationGroupNeuralNetwork RGNN(b);
     
     RGNN.train(N, n_cycles, n_samples, n_samples_eq, Tc, h, eta);
