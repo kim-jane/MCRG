@@ -7,11 +7,14 @@ dir = "/mnt/home/kimjane7/MCRG"
 
 
 n_processes = 100
+nodes = int(np.ceil(n_processes/20.0))
+
 N = [2**i for i in range(3,8)]
 
 Tc = 2.0/np.log(1.0+np.sqrt(2.0))
 DeltaT = 0.1
 T = np.linspace(Tc-DeltaT, Tc+DeltaT, num=21)
+
 
 for n in N:
     for t in T:
@@ -26,6 +29,7 @@ for n in N:
         f.write("#!/bin/bash --login\n")
         f.write("#SBATCH --time=03:59:00\n")
         f.write("#SBATCH --ntasks=%d\n" % n_processes)
+        f.write("#SBATCH --nodes=%d\n" % nodes)
         f.write("#SBATCH --mem-per-cpu=%dG\n" % int(np.ceil(n/8.0)))
         f.write("#SBATCH --job-name='rgnn'\n\n")
         
