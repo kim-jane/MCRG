@@ -107,9 +107,16 @@ void RenormalizationGroupNeuralNetwork::apply_filter(mat& input){
             
             for(int k = 0; k < b_; ++k){
                 for(int l = 0; l < b_; ++l){
+                    
+                    // exponential act func
+                    output(i,j) += exp(conv(k,l));
+                    
+                    /*
+                    // relu act func
                     if(conv(k,l) > 0){
                         output(i,j) += conv(k,l);
                     }
+                    */
                 }
             }
         }
