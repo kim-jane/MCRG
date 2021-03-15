@@ -2,8 +2,9 @@
 
 std::random_device rd;
 std::mt19937_64 rng(rd());
-std::uniform_int_distribution<int> binary(0,1);
-std::uniform_real_distribution<double> unif(0.0,1.0);
+std::uniform_int_distribution<int> binary(0, 1);
+std::uniform_real_distribution<double> unif(0.0, 1.0);
+std::normal_distribution<double> narrow_norm(0.0, 0.2);
 
 vec flatten(mat M){
     
@@ -73,4 +74,14 @@ std::string get_rounded_str(double num){
     std::string str = ss.str();
     
     return str;
+}
+
+int split_samples(int rank, int n_processes, int n_samples){
+    
+    int n_samples_loc = ceil((double)n_samples/(double)n_processes);
+    if(rank == 0){
+        n_samples_loc = n_samples-(n_processes-1)*n_samples_loc;
+    }
+    
+    return n_samples_loc;
 }

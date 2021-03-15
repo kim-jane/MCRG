@@ -8,26 +8,32 @@ SOURCES = src/definitions.cpp \
           src/lattice.cpp \
           src/ising.cpp \
           src/mcrg.cpp \
-          src/main.cpp
+          src/rgnn.cpp \
           
 OBJECTS = build/definitions.o \
           build/lattice.o \
           build/ising.o \
           build/mcrg.o \
-          build/main.o
+          build/rgnn.o
           
 
-all: run
+all: run train
 
 
 clean:
-	rm -f run ${OBJECTS} slurm*
+	rm -f run train build/* slurm*
 
-run: ${OBJECTS}
-	${CXX} ${CXXFLAGS} ${OBJECTS} -o run
+run: ${OBJECTS} build/main.o
+	${CXX} ${CXXFLAGS} ${OBJECTS} build/main.o -o run
+
+train: ${OBJECTS} build/train.o
+	${CXX} ${CXXFLAGS} ${OBJECTS} build/train.o -o train
 	
 build/main.o: src/main.cpp
 	${CXX} ${CXXFLAGS} -c src/main.cpp -o build/main.o
+
+build/train.o: src/train.cpp
+	${CXX} ${CXXFLAGS} -c src/train.cpp -o build/train.o
 
 build/definitions.o: src/definitions.cpp
 	${CXX} ${CXXFLAGS} -c src/definitions.cpp -o build/definitions.o
@@ -40,3 +46,6 @@ build/ising.o: src/ising.cpp
 	
 build/mcrg.o: src/mcrg.cpp
 	${CXX} ${CXXFLAGS} -c src/mcrg.cpp -o build/mcrg.o
+	
+build/rgnn.o: src/rgnn.cpp
+	${CXX} ${CXXFLAGS} -c src/rgnn.cpp -o build/rgnn.o

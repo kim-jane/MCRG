@@ -29,8 +29,14 @@ extern std::mt19937_64 rng;
 extern std::uniform_int_distribution<int> binary;
 extern std::uniform_real_distribution<double> unif;
 
+extern std::normal_distribution<double> narrow_norm;
+
 inline auto rand_spin(){
     return 2*binary(rng)-1;
+}
+
+inline auto rand_weight(){
+    return narrow_norm(rng);
 }
 
 inline auto rand_unif(){
@@ -41,3 +47,4 @@ extern void display_spin_up();
 extern void display_spin_down();
 extern bool write_iter(int i);
 extern std::string get_rounded_str(double num);
+extern int split_samples(int rank, int n_processes, int n_samples);

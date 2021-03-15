@@ -39,7 +39,7 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
                 "Blocking Level n", "Largest Eigenvalue", "Critical Exponent nu");
     }
     
-    int n_samples_loc = split_samples(n_samples);
+    int n_samples_loc = split_samples(rank_, n_processes_, n_samples);
     int n_transformations = floor(log(N)/log(b_))-1;
 
     // initialize Ising model at K
@@ -192,7 +192,7 @@ double MonteCarloRenormalizationGroup::approx_critical_point(int n_samples_eq,
                                                              int n_samples,
                                                              int L,
                                                              double K){
-    int n_samples_loc = split_samples(n_samples);
+    int n_samples_loc = split_samples(rank_, n_processes_, n_samples);
     int n_transformations = floor(log(L)/log(b_))-1;
     
     // initialize Ising model at K
@@ -349,12 +349,4 @@ std::shared_ptr<Lattice> MonteCarloRenormalizationGroup::block_spin_transformati
 
 
 
-int MonteCarloRenormalizationGroup::split_samples(int n_samples){
-    
-    int n_samples_loc = ceil((double)n_samples/(double)n_processes_);
-    if(rank_ == 0){
-        n_samples_loc = n_samples-(n_processes_-1)*n_samples_loc;
-    }
-    
-    return n_samples_loc;
-}
+

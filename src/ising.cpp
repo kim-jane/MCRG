@@ -17,8 +17,7 @@ void IsingModel::equilibrate(std::shared_ptr<Lattice> pLattice,
 
     if(rank_ == 0){
         
-        printf("Equilibrating %i N = %i lattice(s) at K = %lf\n",
-               n_processes_, pLattice->N_, K_);
+        //printf("Equilibrating %i N = %i lattice(s) at K = %lf\n", n_processes_, pLattice->N_, K_);
         
         if(write){
             std::string filename = "equilibrate_N_"+std::to_string(pLattice->N_)
@@ -76,7 +75,7 @@ void IsingModel::equilibrate(std::shared_ptr<Lattice> pLattice,
     }
     
     if(rank_ == 0){
-        pLattice->display_spins();
+        //pLattice->display_spins();
         if(write){
             pLattice->write_spins(fptr_);
             fclose(fptr_);
