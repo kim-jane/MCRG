@@ -40,6 +40,8 @@ void RenormalizationGroupNeuralNetwork::train(int N,
                                +"_T_"+get_rounded_str(T, 7)+".txt";
         fptr_ = fopen(filename.c_str(), "w");
         fprintf(fptr_, "# Cycles, Average Predicted Temperature, Stddev Predicted Temperature, Mean Squared Error, || MSE Gradient ||");
+        
+        std::cout << "Training N = " << N << ", T = " << T << " case..." << std::endl;
     }
     
     int n_samples_loc = split_samples(rank_, n_processes_, n_samples);

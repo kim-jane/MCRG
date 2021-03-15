@@ -25,8 +25,6 @@ int main(){
     for(int N = Ni; N <= Nf; N *= b){
         for(double T = Tc-DeltaT; T <= Tc+DeltaT; T += dT){
             
-            std::cout << "Training N = " << N << ", T = " << T << " case..." << std::endl;
-            
             RGNN.initialize_weights();
             RGNN.train(N, n_cycles, n_samples, n_samples_eq, T, h, eta);
         }
