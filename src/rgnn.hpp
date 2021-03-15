@@ -20,16 +20,16 @@ public:
                int n_cycles,
                int n_samples,
                int n_samples_eq,
-               double K);
+               double T);
     
     // forward-pass
-    double predict_coupling(const imat& input_spins);
+    double predict_temperature(const imat& input_spins);
     
     void apply_filter(mat& input);
     
     // simple finite-difference derivative
-    mat calc_coupling_gradient(double h,
-                               const imat& input_spins);
+    mat calc_temperature_gradient(double h,
+                                  const imat& input_spins);
     
     // simple gradient descent
     void update_weights(double eta,
