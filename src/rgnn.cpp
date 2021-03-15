@@ -84,7 +84,7 @@ void RenormalizationGroupNeuralNetwork::train(int N,
         update_weights(eta, grad);
     }
     
-    if(rank_ == 0) std::cout << RGNN.W_ << std::endl;
+    if(rank_ == 0) std::cout << W_ << std::endl;
 }
 
 // forward-pass
