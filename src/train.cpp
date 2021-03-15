@@ -9,7 +9,7 @@ int main(){
     int n_cycles = 1E3;
     int n_samples = 1E5;
     int n_samples_eq = 1E4;
-    double Tc = 2.0;
+    double Tc = 2.2;
     double h = 0.001;
     double eta = 0.001;
     

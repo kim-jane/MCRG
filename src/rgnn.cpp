@@ -108,15 +108,13 @@ void RenormalizationGroupNeuralNetwork::apply_filter(mat& input){
             for(int k = 0; k < b_; ++k){
                 for(int l = 0; l < b_; ++l){
                     
-                    // sigmoid act func
-                    output(i,j) += 1/(1+exp(-conv(k,l)));
-                    
-                    /*
-                    // relu act func
+                    // elu act func
                     if(conv(k,l) > 0){
                         output(i,j) += conv(k,l);
                     }
-                    */
+                    else{
+                        output(i,j) += exp(conv(k,l))-1;
+                    }
                 }
             }
         }
