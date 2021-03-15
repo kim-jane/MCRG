@@ -56,7 +56,7 @@ void RenormalizationGroupNeuralNetwork::train(int N,
             
             // calculate
             mse_loc += (T_pred-T)*(T_pred-T);
-            grad_loc += 2*(T_pred-T)*calc_temperature_gradient(h, pLattice->spins_);
+            grad_loc += 2*(T-T_pred)*calc_temperature_gradient(h, pLattice->spins_);
             
         }
         MPI_Allreduce(&T_pred_avg_loc, &T_pred_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
