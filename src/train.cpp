@@ -10,7 +10,7 @@ int main(){
     int n_samples = 1E5;
     int n_samples_eq = 1E4;
     double Tc = 2.2;
-    double h = 0.001;
+    double h = 0.0001;
     double eta = 0.001;
     
     RenormalizationGroupNeuralNetwork RGNN(b);
