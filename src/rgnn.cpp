@@ -12,6 +12,8 @@ RenormalizationGroupNeuralNetwork::RenormalizationGroupNeuralNetwork(int b){
             W_(i,j) = rand_weight();
         }
     }
+    
+    MPI_Bcast(W_.data(), b_*b_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 }
 
 
@@ -81,6 +83,8 @@ void RenormalizationGroupNeuralNetwork::train(int N,
         // gradient descent
         update_weights(eta, grad);
     }
+    
+    if(rank_ == 0) std::cout << RGNN.W_ << std::endl;
 }
 
 // forward-pass

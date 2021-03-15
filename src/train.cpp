@@ -17,7 +17,7 @@ int main(){
     
     RGNN.train(N, n_cycles, n_samples, n_samples_eq, Tc, h, eta);
     
-    std::cout << RGNN.W_ << std::endl;
+    
     
     MPI_Finalize();
     return 0;
