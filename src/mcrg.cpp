@@ -29,7 +29,7 @@ void MonteCarloRenormalizationGroup::calc_critical_exponent(int n_samples_eq,
         printf("* Calculating critical exponent at K = %lf\n\n", K);
         
         std::string filename = "critical_exponent_N_"+std::to_string(N)
-                               +"_K_"+get_rounded_str(K)+".txt";
+                               +"_K_"+get_rounded_str(K,7)+".txt";
         fptr_ = fopen(filename.c_str(), "w");
         
         fprintf(fptr_, "# Number of parallel processes = %i\n", n_processes_);
@@ -155,7 +155,7 @@ double MonteCarloRenormalizationGroup::locate_critical_point(int n_iterations,
     
         // open file
         std::string filename = "critical_point_L_"+std::to_string(L)
-                               +"_K_"+get_rounded_str(K0)+".txt";
+                               +"_K_"+get_rounded_str(K0,7)+".txt";
         fptr_ = fopen(filename.c_str(), "w");
         
         // headings

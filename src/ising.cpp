@@ -21,7 +21,7 @@ void IsingModel::equilibrate(std::shared_ptr<Lattice> pLattice,
         
         if(write){
             std::string filename = "equilibrate_N_"+std::to_string(pLattice->N_)
-                                   +"_K_"+get_rounded_str(K_)
+                                   +"_K_"+get_rounded_str(K_,7)
                                    +".txt";
 
             fptr_ = fopen(filename.c_str(), "w");

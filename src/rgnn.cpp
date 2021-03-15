@@ -6,9 +6,16 @@ RenormalizationGroupNeuralNetwork::RenormalizationGroupNeuralNetwork(int b){
     MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
     
     b_ = b;
-    W_.resize(b,b);
-    for(int i = 0; i < b; ++i){
-        for(int j = 0; j < b; ++j){
+    initialize_weights();
+}
+
+
+// initialize random weights
+void RenormalizationGroupNeuralNetwork::initialize_weights(){
+    
+    W_.resize(b_, b_);
+    for(int i = 0; i < b_; ++i){
+        for(int j = 0; j < b_; ++j){
             W_(i,j) = rand_weight();
         }
     }
@@ -26,6 +33,14 @@ void RenormalizationGroupNeuralNetwork::train(int N,
                                               double T,
                                               double h,
                                               double eta){
+    
+    // open file
+    if(rank_ == 0){
+        std::string filename = "train_N_"+std::to_string(N)
+                               +"_T_"+get_rounded_str(T, 7)+".txt";
+        fptr_ = fopen(filename.c_str(), "w");
+        fprintf(fptr_, "# Cycles, Average Predicted Temperature, Stddev Predicted Temperature, Mean Squared Error, || MSE Gradient ||");
+    }
     
     int n_samples_loc = split_samples(rank_, n_processes_, n_samples);
     double mse, mse_loc;
@@ -76,7 +91,7 @@ void RenormalizationGroupNeuralNetwork::train(int N,
         grad /= n_samples;
         
         if(rank_ == 0){
-            printf("%10i %10.5lf %10.5lf %10.5lf %10.5lf\n", cycles, T_pred_avg, T_pred_sigma, mse, grad.norm());
+            fprintf(fptr_, "%10i %10.5lf %10.5lf %10.5lf %10.5lf\n", cycles, T_pred_avg, T_pred_sigma, mse, grad.norm());
         }
         
         
@@ -84,7 +99,16 @@ void RenormalizationGroupNeuralNetwork::train(int N,
         update_weights(eta, grad);
     }
     
-    if(rank_ == 0) std::cout << W_ << std::endl;
+    if(rank_ == 0){
+        
+        fprintf(fptr_, "\nFinal Weights: ");
+        for(int i = 0; i < b_; ++i){
+            for(int j = 0; j < b_; ++j){
+                fprintf(fptr_, "%20.10lf ", W_(i,j));
+            }
+        }
+        fclose(fptr_);
+    }
 }
 
 // forward-pass

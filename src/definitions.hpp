@@ -46,5 +46,5 @@ inline auto rand_unif(){
 extern void display_spin_up();
 extern void display_spin_down();
 extern bool write_iter(int i);
-extern std::string get_rounded_str(double num);
+extern std::string get_rounded_str(double num, int precision);
 extern int split_samples(int rank, int n_processes, int n_samples);

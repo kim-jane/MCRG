@@ -14,6 +14,10 @@ public:
     int rank_;
     int b_;
     mat W_;
+    FILE* fptr_;
+    
+    // random initial weights
+    void initialize_weights();
     
     // train RGNN over a range of couplings
     void train(int N,

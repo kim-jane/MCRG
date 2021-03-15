@@ -67,10 +67,10 @@ bool write_iter(int i){
     return write;
 }
 
-std::string get_rounded_str(double num){
+std::string get_rounded_str(double num, int precision){
     
     std::stringstream ss;
-    ss << std::setprecision(7) << num;
+    ss << std::setprecision(precision) << num;
     std::string str = ss.str();
     
     return str;
