@@ -26,11 +26,11 @@ void RenormalizationGroupNeuralNetwork::train(int N,
                                               double eta){
     
     int n_samples_loc = split_samples(rank_, n_processes_, n_samples);
-    double T_pred, mse, mse_loc;
+    double mse, mse_loc;
+    double T_pred, T_pred_avg, T_pred_avg_loc;
+    double T_pred_sigma, T_pred2_avg, T_pred2_avg_loc;
     mat grad(b_,b_);
     mat grad_loc(b_,b_);
-    
-    double T_pred_avg, T_pred_avg_loc;
     
     // initialize Ising model at chosen coupling
     std::unique_ptr<IsingModel> pIsing(new IsingModel(-1.0/T));
@@ -43,6 +43,7 @@ void RenormalizationGroupNeuralNetwork::train(int N,
         
         // calculate mse and gradient
         T_pred_avg_loc = 0.0;
+        T_pred2_avg_loc = 0.0;
         mse_loc = 0.0;
         grad_loc.setZero();
         for(int samples = 0; samples < n_samples_loc; ++samples){
@@ -53,6 +54,7 @@ void RenormalizationGroupNeuralNetwork::train(int N,
             // pass thru RGNN
             T_pred = predict_temperature(pLattice->spins_);
             T_pred_avg_loc += T_pred;
+            T_pred2_avg_loc += T_pred*T_pred;
             
             // calculate
             mse_loc += (T_pred-T)*(T_pred-T);
@@ -60,16 +62,19 @@ void RenormalizationGroupNeuralNetwork::train(int N,
             
         }
         MPI_Allreduce(&T_pred_avg_loc, &T_pred_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&T_pred2_avg_loc, &T_pred2_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         MPI_Allreduce(&mse_loc, &mse, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         MPI_Allreduce(grad_loc.data(), grad.data(), b_*b_, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         
         // average
         T_pred_avg /= n_samples;
+        T_pred2_avg /= n_samples;
+        T_pred_sigma = sqrt(T_pred2_avg-T_pred_avg*T_pred_avg);
         mse /= n_samples;
         grad /= n_samples;
         
         if(rank_ == 0){
-            printf("%10i %10.5lf %10.5lf %10.5lf\n", cycles, T_pred_avg, mse, grad.norm());
+            printf("%10i %10.5lf %10.5lf %10.5lf %10.5lf\n", cycles, T_pred_avg, T_pred_sigma, mse, grad.norm());
         }
         
         
