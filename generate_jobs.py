@@ -11,7 +11,7 @@ N = [2**i for i in range(3,8)]
 
 Tc = 2.0/np.log(1.0+np.sqrt(2.0))
 DeltaT = 0.1
-T = np.linspace(Tc-DeltaT, Tc+DeltaT, num=20)
+T = np.linspace(Tc-DeltaT, Tc+DeltaT, num=21)
 
 for n in N:
     for t in T:

@@ -21,7 +21,7 @@ all: run train
 
 
 clean:
-	rm -f run train build/* slurm*
+	rm -f run train build/* jobs/* slurm*
 
 run: ${OBJECTS} build/main.o
 	${CXX} ${CXXFLAGS} ${OBJECTS} build/main.o -o run
