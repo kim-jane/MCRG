@@ -122,7 +122,7 @@ void RenormalizationGroupNeuralNetwork::apply_filter(mat& input){
 mat RenormalizationGroupNeuralNetwork::calc_temperature_gradient(double h,
                                                                  const imat& input_spins){
     
-    double W, T1, T2;
+    double W, T1, T2, T3, T4;
     
     mat grad(b_, b_);
     grad.setZero();
@@ -133,14 +133,20 @@ mat RenormalizationGroupNeuralNetwork::calc_temperature_gradient(double h,
             // store original weight
             W = W_(i,j);
             
-            // finite differences
-            W_(i,j) = W+h;
+            // finite differences O(h^4)
+            W_(i,j) = W+2*h;
             T1 = predict_temperature(input_spins);
             
-            W_(i,j) = W-h;
+            W_(i,j) = W+h;
             T2 = predict_temperature(input_spins);
             
-            grad(i,j) = (T1-T2)/(2*h);
+            W_(i,j) = W-h;
+            T3 = predict_temperature(input_spins);
+            
+            W_(i,j) = W-2*h;
+            T4 = predict_temperature(input_spins);
+            
+            grad(i,j) = (-T1 + 8*T2 - 8*T3 + T4)/(12*h);
             
             // return weight to original value
             W_(i,j) = W;
