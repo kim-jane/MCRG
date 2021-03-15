@@ -5,7 +5,7 @@ int main(){
     MPI_Init(NULL, NULL);
     
     int b = 2;
-    int N = 32;
+    int N = 8;
     int n_cycles = 1E3;
     int n_samples = 1E5;
     int n_samples_eq = 1E4;
