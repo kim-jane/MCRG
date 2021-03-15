@@ -7,7 +7,7 @@ int main(){
     int b = 2;
     int N = 8;
     int n_cycles = 5000;
-    int n_samples = 1E5;
+    int n_samples = 1E6;
     int n_samples_eq = 1E4;
     double Tc = 2/log(1+sqrt(2));
     double h = 0.0001;
