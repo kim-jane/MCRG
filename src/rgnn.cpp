@@ -125,7 +125,8 @@ double RenormalizationGroupNeuralNetwork::predict_temperature(const imat& input_
 
 void RenormalizationGroupNeuralNetwork::apply_filter(mat& input){
     
-    int N = input.rows()/b_;
+    // stride = 1
+    int N = input.rows()-b_+1;
     mat output(N,N);
     mat conv(b_,b_);
     output.setZero();
@@ -133,7 +134,7 @@ void RenormalizationGroupNeuralNetwork::apply_filter(mat& input){
     for(int i = 0; i < N; ++i){
         for(int j = 0; j < N; ++j){
             
-            conv = W_*input.block(b_*i, b_*j, b_, b_);
+            conv = W_*input.block(i, j, b_, b_);
             
             for(int k = 0; k < b_; ++k){
                 for(int l = 0; l < b_; ++l){

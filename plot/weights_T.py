@@ -44,18 +44,22 @@ def get_final_weights(filename):
 
 Tc = 2/np.log(1+np.sqrt(2))
 
-print(get_filenames())
 
 for filename in get_filenames():
     
     N, T = get_params(filename)
     weights = get_final_weights(filename)
-    print(N, T, weights)
     
     if N == 4:
-        temp = (T/Tc)*np.ones(len(weights))
+        c = 'r'
         
-        plt.scatter(T/Tc, sum(weights))
-        #plt.scatter(temp, weights)
+    if N == 8:
+        c = 'g'
+        
+    if N == 16:
+        c = 'b'
+    
+    temp = (T/Tc)*np.ones(len(weights))
+    plt.scatter(temp, weights, color=c)
 
 plt.show()
