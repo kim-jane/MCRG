@@ -6,15 +6,13 @@ RenormalizationGroupNeuralNetwork::RenormalizationGroupNeuralNetwork(int b){
     MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
     
     b_ = b;
-    initialize();
-    
-    // adam optimizer params
     beta1_ = 0.9;
     beta2_ = 0.999;
     epsilon_ = 1E-8;
     m_.resize(b_*b_);
     v_.resize(b_*b_);
-
+    
+    initialize();
 }
 
 
@@ -70,7 +68,7 @@ void RenormalizationGroupNeuralNetwork::train(int N,
     std::shared_ptr<Lattice> pLattice(new Lattice(N));
     pIsing->equilibrate(pLattice, n_samples_eq, false);
         
-    for(int cycles = 0; cycles < n_cycles; ++cycles){
+    for(int cycles = 0; cycles <= n_cycles; ++cycles){
         
         // calculate mse and gradient
         T_pred_avg_loc = 0.0;
