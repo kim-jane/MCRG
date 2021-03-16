@@ -6,8 +6,8 @@ int main(int argc, char* argv[]){
     
     int b = 2;
     int N = atoi(argv[1]);
-    int n_cycles = 2E3;
-    int n_samples = 1E6;
+    int n_cycles = 5E3;
+    int n_samples = 1E5;
     int n_samples_eq = 1E4;
     double T = atof(argv[2]);
     double h = 0.0001;
