@@ -1,5 +1,10 @@
 #include "rgnn.hpp"
 
+// train with energy instead of temperature
+// print variance not not stddev
+// add L1 (lasso) regularization to drive weights to zero
+// when printing final weights, also print out example values of intermediate conv layers so i can make imshow plot
+
 RenormalizationGroupNeuralNetwork::RenormalizationGroupNeuralNetwork(int b){
     
     MPI_Comm_size(MPI_COMM_WORLD, &n_processes_);
@@ -41,16 +46,16 @@ void RenormalizationGroupNeuralNetwork::train(int N,
                                               int n_samples_eq,
                                               double T,
                                               double h,
-                                              double eta){
+                                              double eta,
+                                              double lambda){
     
     // open file
     if(rank_ == 0){
-        std::string filename = "train_N_"+std::to_string(N)
-                               +"_T_"+get_rounded_str(T, 7)+".txt";
+        std::string filename = "train_b"+std::to_string(b_)
+                               +"_N"+std::to_string(N)
+                               +"_T"+get_rounded_str(T, 7)+".txt";
         fptr_ = fopen(filename.c_str(), "w");
         fprintf(fptr_, "# Cycles, Average Predicted Temperature, Stddev Predicted Temperature, Mean Squared Error, || MSE Gradient ||\n");
-        
-        std::cout << "Training N = " << N << ", T = " << T << " case..." << std::endl;
     }
     
     int n_samples_loc = split_samples(rank_, n_processes_, n_samples);
@@ -84,9 +89,17 @@ void RenormalizationGroupNeuralNetwork::train(int N,
             T_pred_avg_loc += T_pred;
             T_pred2_avg_loc += T_pred*T_pred;
             
-            // calculate
+            // calculate cost and gradient
             mse_loc += (T_pred-T)*(T_pred-T);
             grad_loc += 2*(T_pred-T)*calc_temperature_gradient(h, pLattice->spins_);
+            
+            // add regularization term
+            for(int i = 0; i < b_; ++i){
+                for(int j = 0; j < b_; ++j){
+                    mse_loc += lambda*std::fabs(W_(i,j));
+                    grad_loc(i,j) += lambda*(std::fabs(W_(i,j)+h)-std::fabs(W_(i,j)-h))/(2*h);
+                }
+            }
             
         }
         MPI_Allreduce(&T_pred_avg_loc, &T_pred_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);

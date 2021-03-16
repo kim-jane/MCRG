@@ -34,7 +34,8 @@ public:
                int n_samples_eq,
                double T,
                double h,
-               double eta);
+               double eta,
+               double lambda);
     
     // forward-pass
     double predict_temperature(const imat& input_spins);
