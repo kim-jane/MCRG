@@ -41,14 +41,32 @@ def get_final_weights(filename):
     
     return weights
 
+# returns results at specified cycle number
+def get_results(filename, cycle):
+
+    file = open(filename, "r")
+    results = []
+    
+    for line in file:
+        
+        results_str = line.split()
+        
+        if len(results_str) > 0:
+            if str(cycle) == results_str[0]:
+                for r in results_str[1:]:
+                    results.append(float(r))
+                
+    return results
+
 
 Tc = 2/np.log(1+np.sqrt(2))
-
 
 for filename in get_filenames():
     
     N, T = get_params(filename)
     weights = get_final_weights(filename)
+    results = get_results(filename, 10000)
+    temp = (T/Tc)*np.ones(len(weights))
     
     if N == 4:
         c = 'r'
@@ -58,8 +76,11 @@ for filename in get_filenames():
         
     if N == 16:
         c = 'b'
+        plt.scatter(T/Tc, results[0], c=c)
     
-    temp = (T/Tc)*np.ones(len(weights))
-    plt.scatter(temp, weights, color=c)
+    
+#plt.ylim(-1,1)
+plt.grid(alpha=0.2)
+    
 
 plt.show()
