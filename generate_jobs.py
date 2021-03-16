@@ -19,7 +19,7 @@ T = np.linspace(0.5*Tc, 1.5*Tc, num=5)
 for n in N:
     for t in T:
     
-        jobfile = "jobs/train_b_%d_N_%d_T_%.7f_np_%d.sb"\
+        jobfile = "jobs/train_b%d_N%d_T%.7f_np%d.sb"\
                   % (b, n, t, n_processes)
                   
         command = "srun -n %d train %d %d %.15f" \
