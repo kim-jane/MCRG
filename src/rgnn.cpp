@@ -102,7 +102,7 @@ void RenormalizationGroupNeuralNetwork::train(int N,
         grad /= n_samples;
         
         if(rank_ == 0){
-            fprintf(fptr_, "%10i %10.7e %10.7e %10.7e %10.7e\n", cycles, T_pred_avg, T_pred_sigma, mse, grad.norm());
+            fprintf(fptr_, "%10i%15.7e%15.7e%15.7e%15.7e\n", cycles, T_pred_avg, T_pred_sigma, mse, grad.norm());
         }
         
         
@@ -115,7 +115,7 @@ void RenormalizationGroupNeuralNetwork::train(int N,
         fprintf(fptr_, "\nFinal Weights: ");
         for(int i = 0; i < b_; ++i){
             for(int j = 0; j < b_; ++j){
-                fprintf(fptr_, "%20.10lf ", W_(i,j));
+                fprintf(fptr_, "%20.10lf", W_(i,j));
             }
         }
         fclose(fptr_);
