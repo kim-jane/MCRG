@@ -9,7 +9,7 @@ dir = "/mnt/home/kimjane7/MCRG"
 n_processes = 100
 nodes = int(np.ceil(n_processes/20.0))
 
-N = [32]
+N = [8]
 
 Tc = 2.0/np.log(1.0+np.sqrt(2.0))
 T = np.linspace(0.5*Tc, 1.5*Tc, num=21)
