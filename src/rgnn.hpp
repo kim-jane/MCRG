@@ -13,11 +13,19 @@ public:
     int n_processes_;
     int rank_;
     int b_;
+    int t_;
+    double eta_;
+    double beta1_;
+    double beta2_;
+    double epsilon_ = 1.0E-8;
+    vec m_;
+    vec v_;
     mat W_;
     FILE* fptr_;
+
     
-    // random initial weights
-    void initialize_weights();
+    // random initial weights and optimizer
+    void initialize();
     
     // train RGNN over a range of couplings
     void train(int N,

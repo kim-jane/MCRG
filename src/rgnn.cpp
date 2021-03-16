@@ -6,12 +6,20 @@ RenormalizationGroupNeuralNetwork::RenormalizationGroupNeuralNetwork(int b){
     MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
     
     b_ = b;
-    initialize_weights();
+    initialize();
+    
+    // adam optimizer params
+    beta1_ = 0.9;
+    beta2_ = 0.999;
+    epsilon_ = 1E-8;
+    m_.resize(b_*b_);
+    v_.resize(b_*b_);
+
 }
 
 
-// initialize random weights
-void RenormalizationGroupNeuralNetwork::initialize_weights(){
+// initialize random weights and optimizer
+void RenormalizationGroupNeuralNetwork::initialize(){
     
     W_.resize(b_, b_);
     for(int i = 0; i < b_; ++i){
@@ -21,6 +29,10 @@ void RenormalizationGroupNeuralNetwork::initialize_weights(){
     }
     
     MPI_Bcast(W_.data(), b_*b_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    
+    t_ = 1;
+    m_.setZero();
+    v_.setZero();
 }
 
 
@@ -185,6 +197,13 @@ mat RenormalizationGroupNeuralNetwork::calc_temperature_gradient(double h,
 // simple gradient descent
 void RenormalizationGroupNeuralNetwork::update_weights(double eta,
                                                        const mat& gradient){
-    W_ -= eta*gradient;
+    
+    m_ = beta1_*m_ + (1.0-beta1_)*gradient;
+    v_ = beta2_*v_ + (1.0-beta2_)*square(gradient);
+    eta_ = eta*sqrt(1.0-pow(beta2_, t_))/(1.0-pow(beta1_, t_));
+
+    W_ -= eta_*divide(m_, add(root(v_), epsilon_));
+    MPI_Bcast(W_.data(), b_*b_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    t_ += 1;
 }
 
