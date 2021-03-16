@@ -4,7 +4,7 @@ int main(int argc, char* argv[]){
     
     MPI_Init(NULL, NULL);
     
-    int b = 2;
+    int b = 3;
     int N = atoi(argv[1]);
     int n_cycles = 1E4;
     int n_samples = 1E5;
