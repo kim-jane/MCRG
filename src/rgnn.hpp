@@ -17,9 +17,9 @@ public:
     double eta_;
     double beta1_;
     double beta2_;
-    double epsilon_ = 1.0E-8;
-    vec m_;
-    vec v_;
+    double epsilon_;
+    mat m_;
+    mat v_;
     mat W_;
     FILE* fptr_;
 

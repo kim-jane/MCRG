@@ -49,14 +49,3 @@ extern bool write_iter(int i);
 extern std::string get_rounded_str(double num, int precision);
 extern int split_samples(int rank, int n_processes, int n_samples);
 
-// element-wise square
-extern vec square(vec v);
-
-// element-wise squareroot
-extern vec root(vec v);
-
-// element-wise add double
-extern vec add(vec v, double epsilon);
- 
-// element-wise divide
-extern vec divide(vec u, vec v);

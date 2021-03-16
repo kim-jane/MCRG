@@ -9,9 +9,6 @@ RenormalizationGroupNeuralNetwork::RenormalizationGroupNeuralNetwork(int b){
     beta1_ = 0.9;
     beta2_ = 0.999;
     epsilon_ = 1E-8;
-    m_.resize(b_*b_);
-    v_.resize(b_*b_);
-    
     initialize();
 }
 
@@ -29,6 +26,8 @@ void RenormalizationGroupNeuralNetwork::initialize(){
     MPI_Bcast(W_.data(), b_*b_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     
     t_ = 1;
+    m_.resize(b_, b_);
+    v_.resize(b_, b_);
     m_.setZero();
     v_.setZero();
 }
@@ -196,12 +195,16 @@ mat RenormalizationGroupNeuralNetwork::calc_temperature_gradient(double h,
 void RenormalizationGroupNeuralNetwork::update_weights(double eta,
                                                        const mat& gradient){
     
-    m_ = beta1_*m_ + (1.0-beta1_)*gradient;
-    v_ = beta2_*v_ + (1.0-beta2_)*square(gradient);
     eta_ = eta*sqrt(1.0-pow(beta2_, t_))/(1.0-pow(beta1_, t_));
-
-    W_ -= eta_*divide(m_, add(root(v_), epsilon_));
-    MPI_Bcast(W_.data(), b_*b_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    
+    for(int i = 0; i < b_; ++i){
+        for(int j = 0; j < b_; ++j){
+            m_(i,j) = beta1_*m_(i,j)+(1.0-beta1_)*gradient(i,j);
+            v_(i,j) = beta2_*v_(i,j)+(1.0-beta2_)*gradient(i,j)*gradient(i,j);
+            W_(i,j) -= eta_*m_(i,j)/(sqrt(v_(i,j))+epsilon_);
+        }
+    }
+    
     t_ += 1;
 }
 
