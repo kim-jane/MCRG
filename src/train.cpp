@@ -12,7 +12,7 @@ int main(int argc, char* argv[]){
     double T = atof(argv[3]);
     double h = 0.0001;
     double eta = 0.001;
-    double lambda = 0.1;
+    double lambda = 0.0001;
     
     RenormalizationGroupNeuralNetwork RGNN(b);
     RGNN.train(N, n_cycles, n_samples, n_samples_eq, T, h, eta, lambda);
