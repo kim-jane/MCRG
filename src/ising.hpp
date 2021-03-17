@@ -16,6 +16,8 @@ public:
                      int n_samples_eq,
                      bool write);
     void sample_new_configuration(std::shared_ptr<Lattice> pLattice);
+    double calc_magnetization(std::shared_ptr<Lattice> pLattice);
+    double calc_energy(std::shared_ptr<Lattice> pLattice);
 
     
 private:
@@ -35,6 +37,5 @@ private:
     
     void grow_cluster(std::shared_ptr<Lattice> pLattice);
     bool in_cluster(int k);
-    double calc_magnetization(std::shared_ptr<Lattice> pLattice);
-    double calc_energy(std::shared_ptr<Lattice> pLattice);
+    
 };

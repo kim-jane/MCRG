@@ -65,6 +65,8 @@ void RenormalizationGroupNeuralNetwork::train(int N,
     mat grad(b_,b_);
     mat grad_loc(b_,b_);
     
+    double E;
+    
     // initialize Ising model at chosen coupling
     std::unique_ptr<IsingModel> pIsing(new IsingModel(-1.0/T));
     
@@ -73,6 +75,8 @@ void RenormalizationGroupNeuralNetwork::train(int N,
     pIsing->equilibrate(pLattice, n_samples_eq, false);
         
     for(int cycles = 0; cycles <= n_cycles; ++cycles){
+        
+        
         
         // calculate mse and gradient
         T_pred_avg_loc = 0.0;
@@ -84,14 +88,17 @@ void RenormalizationGroupNeuralNetwork::train(int N,
             // get new sample
             pIsing->sample_new_configuration(pLattice);
             
+            // calculate energy of sample
+            E = pIsing->calc_energy(pLattice);
+            
             // pass thru RGNN
             T_pred = predict_temperature(pLattice->spins_);
             T_pred_avg_loc += T_pred;
             T_pred2_avg_loc += T_pred*T_pred;
             
             // calculate cost and gradient
-            mse_loc += (T_pred-T)*(T_pred-T);
-            grad_loc += 2*(T_pred-T)*calc_temperature_gradient(h, pLattice->spins_);
+            mse_loc += (T_pred-E)*(T_pred-E);
+            grad_loc += 2*(T_pred-E)*calc_temperature_gradient(h, pLattice->spins_);
             
             // add regularization term
             for(int i = 0; i < b_; ++i){
