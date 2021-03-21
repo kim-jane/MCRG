@@ -34,8 +34,7 @@ public:
                       int n_samples_eq,
                       double T,
                       double h,
-                      double eta,
-                      double lambda);
+                      double eta);
     
     // forward-pass
     double scalar_output(const imat& input_spins);

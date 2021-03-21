@@ -46,13 +46,12 @@ void RenormalizationGroupNeuralNetwork::train_energy(int L,
                                                      int n_samples_eq,
                                                      double K,
                                                      double h,
-                                                     double eta,
-                                                     double lambda){
+                                                     double eta){
     
     // open file
     if(rank_ == 0){
         std::string filename = "trainE_b"+std::to_string(b_)
-                               +"_N"+std::to_string(K)
+                               +"_N"+std::to_string(L)
                                +"_K"+get_rounded_str(K, 7)+".txt";
         fptr_ = fopen(filename.c_str(), "w");
         fprintf(fptr_, "# Cycles, Average Predicted Energy, Stddev Predicted Energy, Mean Squared Error, || MSE Gradient ||\n");
@@ -93,7 +92,7 @@ void RenormalizationGroupNeuralNetwork::train_energy(int L,
             // get new sample
             pIsing->sample_new_configuration(pLattice);
             
-            // calculate energy of sample
+            // calculate nn energy per spin
             E = pIsing->calc_energy(pLattice);
             
             // pass sample thru RGNN
@@ -104,20 +103,7 @@ void RenormalizationGroupNeuralNetwork::train_energy(int L,
             // calculate cost and gradient
             mse_loc += (E_pred-E)*(E_pred-E);
             grad_loc += 2*(E_pred-E)*calc_gradient_scalar_output(h, pLattice->spins_);
-            
-            
-            // add regularization term
-            if(lambda > 0.0){
-                for(int i = 0; i < b_; ++i){
-                    for(int j = 0; j < b_; ++j){
-                        mse_loc += lambda*std::fabs(W_(i,j));
-                        grad_loc(i,j) += lambda*(std::fabs(W_(i,j)+h)-std::fabs(W_(i,j)-h))/(2*h);
-                    }
-                }
-            }
-
-            
-            
+        
         }
         MPI_Allreduce(&E_pred_avg_loc, &
                       E_pred_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);

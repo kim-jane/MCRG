@@ -169,13 +169,13 @@ double IsingModel::calc_energy(std::shared_ptr<Lattice> pLattice){
         }
     }
     
-    return E_;
+    return E_/(pLattice->N_*pLattice->N_);
 }
 
 
 double IsingModel::calc_magnetization(std::shared_ptr<Lattice> pLattice){
     
-    return pLattice->spins_.sum();
+    return pLattice->spins_.sum()/(pLattice->N_*pLattice->N_);
 }
 
 
