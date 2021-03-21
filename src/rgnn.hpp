@@ -28,22 +28,22 @@ public:
     void initialize();
     
     // train RGNN over a range of couplings
-    void train(int N,
-               int n_cycles,
-               int n_samples,
-               int n_samples_eq,
-               double T,
-               double h,
-               double eta,
-               double lambda);
+    void train_energy(int L,
+                      int n_cycles,
+                      int n_samples,
+                      int n_samples_eq,
+                      double T,
+                      double h,
+                      double eta,
+                      double lambda);
     
     // forward-pass
-    double predict_temperature(const imat& input_spins);
+    double scalar_output(const imat& input_spins);
     
     void apply_filter(mat& input);
     
     // simple finite-difference derivative
-    mat calc_temperature_gradient(double h,
+    mat calc_gradient_scalar_output(double h,
                                   const imat& input_spins);
     
     // simple gradient descent

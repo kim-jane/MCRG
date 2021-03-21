@@ -39,48 +39,53 @@ void RenormalizationGroupNeuralNetwork::initialize(){
 
 
 
-// train RGNN over a range of couplings
-void RenormalizationGroupNeuralNetwork::train(int N,
-                                              int n_cycles,
-                                              int n_samples,
-                                              int n_samples_eq,
-                                              double T,
-                                              double h,
-                                              double eta,
-                                              double lambda){
+// train RGNN to predict energy
+void RenormalizationGroupNeuralNetwork::train_energy(int L,
+                                                     int n_cycles,
+                                                     int n_samples,
+                                                     int n_samples_eq,
+                                                     double K,
+                                                     double h,
+                                                     double eta,
+                                                     double lambda){
     
     // open file
     if(rank_ == 0){
-        std::string filename = "train_b"+std::to_string(b_)
-                               +"_N"+std::to_string(N)
-                               +"_T"+get_rounded_str(T, 7)+".txt";
+        std::string filename = "trainE_b"+std::to_string(b_)
+                               +"_N"+std::to_string(K)
+                               +"_K"+get_rounded_str(K, 7)+".txt";
         fptr_ = fopen(filename.c_str(), "w");
-        fprintf(fptr_, "# Cycles, Average Predicted Temperature, Stddev Predicted Temperature, Mean Squared Error, || MSE Gradient ||\n");
+        fprintf(fptr_, "# Cycles, Average Predicted Energy, Stddev Predicted Energy, Mean Squared Error, || MSE Gradient ||\n");
     }
     
     int n_samples_loc = split_samples(rank_, n_processes_, n_samples);
     double mse, mse_loc;
-    double T_pred, T_pred_avg, T_pred_avg_loc;
-    double T_pred_sigma, T_pred2_avg, T_pred2_avg_loc;
+    double E_pred, E_pred_avg, E_pred_avg_loc;
+    double E_pred_sigma, E_pred2_avg, E_pred2_avg_loc;
     mat grad(b_,b_);
     mat grad_loc(b_,b_);
     
     double E;
     
     // initialize Ising model at chosen coupling
-    std::unique_ptr<IsingModel> pIsing(new IsingModel(-1.0/T));
+    std::unique_ptr<IsingModel> pIsing(new IsingModel(K));
     
-    // equilibrate lattice
-    std::shared_ptr<Lattice> pLattice(new Lattice(N));
+    // equilibrate large lattice
+    std::shared_ptr<Lattice> pLattice(new Lattice(L));
     pIsing->equilibrate(pLattice, n_samples_eq, false);
+    
+    // equilibrate small lattice
+    /*
+    int S = L/b_;
+    std::shared_ptr<Lattice> pLattice(new Lattice(S));
+    pIsing->equilibrate(pLattice, n_samples_eq, false);
+     */
         
     for(int cycles = 0; cycles <= n_cycles; ++cycles){
         
-        
-        
         // calculate mse and gradient
-        T_pred_avg_loc = 0.0;
-        T_pred2_avg_loc = 0.0;
+        E_pred_avg_loc = 0.0;
+        E_pred2_avg_loc = 0.0;
         mse_loc = 0.0;
         grad_loc.setZero();
         for(int samples = 0; samples < n_samples_loc; ++samples){
@@ -91,38 +96,44 @@ void RenormalizationGroupNeuralNetwork::train(int N,
             // calculate energy of sample
             E = pIsing->calc_energy(pLattice);
             
-            // pass thru RGNN
-            T_pred = predict_temperature(pLattice->spins_);
-            T_pred_avg_loc += T_pred;
-            T_pred2_avg_loc += T_pred*T_pred;
+            // pass sample thru RGNN
+            E_pred = scalar_output(pLattice->spins_);
+            E_pred_avg_loc += E_pred;
+            E_pred2_avg_loc += E_pred*E_pred;
             
             // calculate cost and gradient
-            mse_loc += (T_pred-E)*(T_pred-E);
-            grad_loc += 2*(T_pred-E)*calc_temperature_gradient(h, pLattice->spins_);
+            mse_loc += (E_pred-E)*(E_pred-E);
+            grad_loc += 2*(E_pred-E)*calc_gradient_scalar_output(h, pLattice->spins_);
+            
             
             // add regularization term
-            for(int i = 0; i < b_; ++i){
-                for(int j = 0; j < b_; ++j){
-                    mse_loc += lambda*std::fabs(W_(i,j));
-                    grad_loc(i,j) += lambda*(std::fabs(W_(i,j)+h)-std::fabs(W_(i,j)-h))/(2*h);
+            if(lambda > 0.0){
+                for(int i = 0; i < b_; ++i){
+                    for(int j = 0; j < b_; ++j){
+                        mse_loc += lambda*std::fabs(W_(i,j));
+                        grad_loc(i,j) += lambda*(std::fabs(W_(i,j)+h)-std::fabs(W_(i,j)-h))/(2*h);
+                    }
                 }
             }
+
+            
             
         }
-        MPI_Allreduce(&T_pred_avg_loc, &T_pred_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(&T_pred2_avg_loc, &T_pred2_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&E_pred_avg_loc, &
+                      E_pred_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&E_pred2_avg_loc, &E_pred2_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         MPI_Allreduce(&mse_loc, &mse, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         MPI_Allreduce(grad_loc.data(), grad.data(), b_*b_, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         
         // average
-        T_pred_avg /= n_samples;
-        T_pred2_avg /= n_samples;
-        T_pred_sigma = sqrt(T_pred2_avg-T_pred_avg*T_pred_avg);
+        E_pred_avg /= n_samples;
+        E_pred2_avg /= n_samples;
+        E_pred_sigma = sqrt(E_pred2_avg-E_pred_avg*E_pred_avg);
         mse /= n_samples;
         grad /= n_samples;
         
         if(rank_ == 0){
-            fprintf(fptr_, "%10i%15.7e%15.7e%15.7e%15.7e\n", cycles, T_pred_avg, T_pred_sigma, mse, grad.norm());
+            fprintf(fptr_, "%10i%15.7e%15.7e%15.7e%15.7e\n", cycles, E_pred_avg, E_pred_sigma, mse, grad.norm());
         }
         
         
@@ -142,8 +153,8 @@ void RenormalizationGroupNeuralNetwork::train(int N,
     }
 }
 
-// forward-pass
-double RenormalizationGroupNeuralNetwork::predict_temperature(const imat& input_spins){
+// recursively apply filter until only one scalar remains
+double RenormalizationGroupNeuralNetwork::scalar_output(const imat& input_spins){
     
     mat output = input_spins.cast<double>();
     while(output.rows() > 1){
@@ -180,10 +191,10 @@ void RenormalizationGroupNeuralNetwork::apply_filter(mat& input){
 }
 
 // simple finite-difference derivative
-mat RenormalizationGroupNeuralNetwork::calc_temperature_gradient(double h,
-                                                                 const imat& input_spins){
+mat RenormalizationGroupNeuralNetwork::calc_gradient_scalar_output(double h,
+                                                                   const imat& input_spins){
     
-    double W, T1, T2;
+    double W, out1, out2;
     
     mat grad(b_, b_);
     grad.setZero();
@@ -196,12 +207,12 @@ mat RenormalizationGroupNeuralNetwork::calc_temperature_gradient(double h,
             
             // finite differences O(h^2)
             W_(i,j) = W+h;
-            T1 = predict_temperature(input_spins);
+            out1 = scalar_output(input_spins);
             
             W_(i,j) = W-h;
-            T2 = predict_temperature(input_spins);
+            out2 = scalar_output(input_spins);
             
-            grad(i,j) = (T1-T2)/(2*h);
+            grad(i,j) = (out1-out2)/(2*h);
             
             // return weight to original value
             W_(i,j) = W;
