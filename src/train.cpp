@@ -15,7 +15,7 @@ int main(int argc, char* argv[]){
     
     RenormalizationGroupNeuralNetwork RGNN(b);
     
-    RGNN.train_scalar_output(8, 2*n_cycles, n_samples, n_samples_eq, Kc, h, eta);
+    RGNN.train_scalar_output(8, 5*n_cycles, n_samples, n_samples_eq, Kc, h, eta);
     
     for(int N = 16; N <= 64; N *= b){
         RGNN.train_scalar_output(N, n_cycles, n_samples, n_samples_eq, Kc, h, eta);
