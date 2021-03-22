@@ -6,7 +6,7 @@ int main(int argc, char* argv[]){
     
     int b = 2;
     int n_cycles = 1E3;
-    int n_samples = 1E4;
+    int n_samples = 1E3;
     int n_samples_eq = 1E4;
     double Kc = -log(1+sqrt(2))/2;
     double h = 0.0001;
@@ -15,7 +15,7 @@ int main(int argc, char* argv[]){
     
     RenormalizationGroupNeuralNetwork RGNN(b);
     
-    RGNN.train_scalar_output(8, 10*n_cycles, n_samples, n_samples_eq, Kc, h, eta);
+    RGNN.train_scalar_output(8, 2*n_cycles, n_samples, n_samples_eq, Kc, h, eta);
     
     for(int N = 16; N <= 512; N *= b){
         RGNN.train_scalar_output(N, n_cycles, n_samples, n_samples_eq, Kc, h, eta);

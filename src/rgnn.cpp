@@ -258,7 +258,7 @@ void RenormalizationGroupNeuralNetwork::apply_filter(mat& input){
         for(int j = 0; j < N; ++j){
             
             conv = W_*input.block(b_*i, b_*j, b_, b_);
-            output(i,j) = conv.maxCoeff();
+            output(i,j) = conv.lpNorm<Infinity>();
             //output(i,j) = exp(-conv.sum());
 
             /*
