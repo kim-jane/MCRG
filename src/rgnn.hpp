@@ -18,6 +18,7 @@ public:
     double beta1_;
     double beta2_;
     double epsilon_;
+    double w_;
     mat m_;
     mat v_;
     mat W_;
@@ -27,15 +28,21 @@ public:
     // random initial weights and optimizer
     void initialize();
     
-    // train RGNN over a range of couplings
-    void train_energy(int L,
-                      int n_cycles,
-                      int n_samples,
-                      int n_samples_eq,
-                      double T,
-                      double h,
-                      double eta);
     
+    void train_scalar_output(int L,
+                             int n_cycles,
+                             int n_samples,
+                             int n_samples_eq,
+                             double T,
+                             double h,
+                             double eta);
+    
+    void test_temperature(int N,
+                          int n_samples,
+                          int n_samples_eq,
+                          double K,
+                          double DeltaK);
+
     // forward-pass
     double scalar_output(const imat& input_spins);
     
