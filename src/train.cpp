@@ -15,11 +15,9 @@ int main(int argc, char* argv[]){
     
     RenormalizationGroupNeuralNetwork RGNN(b);
     
-    std::cout << "N = 8" << std::endl;
     RGNN.train_scalar_output(8, 10*n_cycles, n_samples, n_samples_eq, Kc, h, eta);
     
     for(int N = 16; N <= 512; N *= b){
-        std::cout << "N = " << N << std::endl;
         RGNN.train_scalar_output(N, n_cycles, n_samples, n_samples_eq, Kc, h, eta);
     }
     
