@@ -259,19 +259,6 @@ void RenormalizationGroupNeuralNetwork::apply_filter(mat& input){
             
             conv = W_*input.block(b_*i, b_*j, b_, b_);
             output(i,j) = conv.lpNorm<Infinity>();
-            //output(i,j) = exp(-conv.sum());
-
-            /*
-            for(int k = 0; k < b_; ++k){
-                for(int l = 0; l < b_; ++l){
-
-                    // relu act func and sum
-                    if(conv(k,l) > 0){
-                        output(i,j) += conv(k,l);
-                    }
-                }
-            }
-             */
         }
     }
     
