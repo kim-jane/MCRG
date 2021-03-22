@@ -199,7 +199,7 @@ void RenormalizationGroupNeuralNetwork::test_scalar_output(int L,
     double uL, uL_avg, uL_avg_loc, uL2_avg, uL2_avg_loc, uL_var;
     double uS, uS_avg, uS_avg_loc, uS2_avg, uS2_avg_loc, uS_var;
     double mse, T;
-    double dK = DeltaK/10;
+    double dK = DeltaK/50;
 
     
     // test in DeltaK range around K0
