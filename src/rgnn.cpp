@@ -154,83 +154,113 @@ void RenormalizationGroupNeuralNetwork::train_scalar_output(int L,
     
     if(rank_ == 0){
         
-        fprintf(fptr_, "\n#Final Weights: ");
+        fprintf(fptr_, "\n# Final Weights: ");
         for(int i = 0; i < b_; ++i){
             for(int j = 0; j < b_; ++j){
                 fprintf(fptr_, "%20.10lf", W_(i,j));
             }
         }
+        
+        fprintf(fptr_, "\n# Example Flow: ");
+        pIsing->sample_new_configuration(pLatticeL);
+        mat output = pLatticeL->spins_.cast<double>();
+        
+        while(output.rows() > 1){
+            
+            for(int i = 0; i < output.rows(); ++i){
+                for(int j = 0; j < output.cols(); ++j){
+                    fprintf(fptr_, "%20.10lf", output(i,j));
+                }
+            }
+            fprintf(fptr_, ", ");
+            apply_filter(output);
+        }
+        fprintf(fptr_, "%20.10lf", output(0,0));
         fclose(fptr_);
     }
 }
 
-
-void RenormalizationGroupNeuralNetwork::test_temperature(int N,
-                                                         int n_samples,
-                                                         int n_samples_eq,
-                                                         double K,
-                                                         double DeltaK){
-    
+void RenormalizationGroupNeuralNetwork::test_scalar_output(int L,
+                                                           int n_samples,
+                                                           int n_samples_eq,
+                                                           double K0,
+                                                           double DeltaK){
     // open file
     if(rank_ == 0){
-        std::string filename = "testT_b"+std::to_string(b_)
-                               +"_N"+std::to_string(N)
-                               +"_K"+get_rounded_str(K, 7)+".txt";
+        std::string filename = "test_scalar_b"+std::to_string(b_)
+                               +"_L"+std::to_string(L)
+                               +"_K"+get_rounded_str(K0, 7)+".txt";
         fptr_ = fopen(filename.c_str(), "w");
-        fprintf(fptr_, "# Temperature, Average Predicted Temperature, Variance Predicted Temperature, Mean Squared Error\n");
-    }
-    
-    int n_samples_loc = split_samples(rank_, n_processes_, n_samples);
-    double mse, mse_loc;
-    double T_pred, T_pred_avg, T_pred_avg_loc;
-    double T_pred_var, T_pred2_avg, T_pred2_avg_loc;
-    double dK = 2*DeltaK/15;
-    
-    for(double k = K-DeltaK; k <= K+DeltaK; k += dK){
         
-        // corresponding temperature
-        double T = -1.0/k;
+        fprintf(fptr_, "\n# Coupling K, Temperature T, Avg Output L, Var Output L, Avg Output S, Var Output S, MSE\n");
+    }
+
+    int n_samples_loc = split_samples(rank_, n_processes_, n_samples);
+    double uL, uL_avg, uL_avg_loc, uL2_avg, uL2_avg_loc, uL_var;
+    double uS, uS_avg, uS_avg_loc, uS2_avg, uS2_avg_loc, uS_var;
+    double mse, T;
+    double dK = DeltaK/10;
+
+    
+    // test in DeltaK range around K0
+    for(double K = K0-DeltaK; K <= K0+DeltaK; K += dK){
         
         // initialize Ising model at chosen coupling
-        std::unique_ptr<IsingModel> pIsing(new IsingModel(k));
+        std::unique_ptr<IsingModel> pIsing(new IsingModel(K));
         
-        // equilibrate large lattice
-        std::shared_ptr<Lattice> pLattice(new Lattice(N));
-        pIsing->equilibrate(pLattice, n_samples_eq, false);
+        // equilibrate large lattices
+        std::shared_ptr<Lattice> pLatticeL(new Lattice(L));
+        pIsing->equilibrate(pLatticeL, n_samples_eq, false);
         
-        // calculate mse and gradient
-        T_pred_avg_loc = 0.0;
-        T_pred2_avg_loc = 0.0;
-        mse_loc = 0.0;
+        // equilibrate small lattice
+        int S = L/b_;
+        std::shared_ptr<Lattice> pLatticeS(new Lattice(S));
+        pIsing->equilibrate(pLatticeS, n_samples_eq, false);
+        
+        T = -1.0/K;
+        uL_avg_loc = 0.0;
+        uL2_avg_loc = 0.0;
+        uS_avg_loc = 0.0;
+        uS2_avg_loc = 0.0;
+        
         for(int samples = 0; samples < n_samples_loc; ++samples){
             
             // get new sample
-            pIsing->sample_new_configuration(pLattice);
+            pIsing->sample_new_configuration(pLatticeL);
+            pIsing->sample_new_configuration(pLatticeS);
             
             // pass sample thru RGNN
-            T_pred = scalar_output(pLattice->spins_);
-            T_pred_avg_loc += T_pred;
-            T_pred2_avg_loc += T_pred*T_pred;
+            uL = scalar_output(pLatticeL->spins_);
+            uS = scalar_output(pLatticeS->spins_);
             
-            // calculate cost and gradient
-            mse_loc += (T_pred-T)*(T_pred-T);
-        
+            // add up values for averages
+            uL_avg_loc += uL;
+            uS_avg_loc += uS;
+            uL2_avg_loc += uL*uL;
+            uS2_avg_loc += uS*uS;
         }
-        MPI_Allreduce(&T_pred_avg_loc, &
-                      T_pred_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(&T_pred2_avg_loc, &T_pred2_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(&mse_loc, &mse, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         
-        // average
-        T_pred_avg /= n_samples;
-        T_pred2_avg /= n_samples;
-        T_pred_var = T_pred2_avg-T_pred_avg*T_pred_avg;
-        mse /= n_samples;
+        MPI_Allreduce(&uL_avg_loc, &uL_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&uS_avg_loc, &uS_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&uL2_avg_loc, &uL2_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&uS2_avg_loc, &uS2_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         
+        // finalize averages
+        uL_avg /= n_samples;
+        uS_avg /= n_samples;
+        uL2_avg /= n_samples;
+        uS2_avg /= n_samples;
+        
+        // variances
+        uL_var = uL2_avg-uL_avg*uL_avg;
+        uS_var = uS2_avg-uS_avg*uS_avg;
+        
+        // cost and gradient
+        mse = (uL_avg-uS_avg)*(uL_avg-uS_avg);
         
         if(rank_ == 0){
-            std::cout << T << "\t" << T_pred_avg << "\t" << mse << std::endl;
-            fprintf(fptr_, "%15.7e%15.7e%15.7e%15.7e\n", T, T_pred_avg, T_pred_var, mse);
+            printf("%15.7e%15.7e%15.7e%15.7e%15.7e\n", K, T, uL_avg, uS_avg, mse);
+            fprintf(fptr_, "%15.7e%15.7e%15.7e%15.7e%15.7e%15.7e%15.7e\n", K, T, uL_avg, uL_var, uS_avg, uS_var, mse);
         }
     }
     
@@ -258,7 +288,8 @@ void RenormalizationGroupNeuralNetwork::apply_filter(mat& input){
         for(int j = 0; j < N; ++j){
             
             conv = W_*input.block(b_*i, b_*j, b_, b_);
-            output(i,j) = conv.lpNorm<Infinity>();
+            //conv = W_.cwiseProduct(input.block(b_*i, b_*j, b_, b_));
+            output(i,j) = conv.lpNorm<1>();
         }
     }
     

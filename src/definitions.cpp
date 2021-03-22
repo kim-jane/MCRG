@@ -4,7 +4,7 @@ std::random_device rd;
 std::mt19937_64 rng(rd());
 std::uniform_int_distribution<int> binary(0, 1);
 std::uniform_real_distribution<double> unif(0.0, 1.0);
-std::normal_distribution<double> narrow_norm(1.0, 0.1);
+std::normal_distribution<double> narrow_norm(0.5, 0.1);
 
 vec flatten(mat M){
     

@@ -37,12 +37,12 @@ public:
                              double h,
                              double eta);
     
-    void test_temperature(int N,
-                          int n_samples,
-                          int n_samples_eq,
-                          double K,
-                          double DeltaK);
-
+    void test_scalar_output(int L,
+                            int n_samples,
+                            int n_samples_eq,
+                            double K0,
+                            double DeltaK);
+    
     // forward-pass
     double scalar_output(const imat& input_spins);
     
