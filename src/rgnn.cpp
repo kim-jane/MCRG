@@ -178,6 +178,7 @@ void RenormalizationGroupNeuralNetwork::test_temperature(int N,
 
     // test in DeltaK range around K0
     for(double K = K0-DeltaK; K <= K0+DeltaK; K += dK){
+    
         
         double T = -1.0/K;
         

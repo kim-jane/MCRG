@@ -1,2 +1,0 @@
-
-# Coupling K, Temperature T, Avg Output L, Var Output L, Avg Output S, Var Output S, MSE
