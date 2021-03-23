@@ -2,27 +2,37 @@ import numpy as np
 import os
 import glob
 
-# returns list of training files in data directory
-def get_filenames():
 
-    format = 'data/train*.txt'
+def sort_key(s):
+    if '=' in s[0]:
+        n = s[0].split('=')[-1]
+        return int(n)
+
+# returns list of training files in data directory
+def get_filenames(keyword):
+
+    format = 'data/'+keyword+'*.txt'
     filenames = glob.glob(format)
-    print('Found %i training files.' % len(filenames))
+    print('Found %i %s files.' % (len(filenames), keyword))
     
     return filenames
 
 # returns N and T extracted from file name
 def get_params(filename):
-    
-    start = filename.find('_N')+3
+
+    start = filename.find('_b')+2
     end = filename.find('_', start)
-    N = int(filename[start:end])
+    b = int(filename[start:end])
     
-    start = filename.find('_T')+3
+    start = filename.find('_L')+2
+    end = filename.find('_', start)
+    L = int(filename[start:end])
+    
+    start = filename.find('_K')+2
     end = filename.find('.txt', start)
-    T = float(filename[start:end])
+    K = float(filename[start:end])
     
-    return N, T
+    return b, L, K
 
 
 # returns final weights extracted from end of file

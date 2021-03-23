@@ -22,7 +22,7 @@ int main(int argc, char* argv[]){
     }
     
     for(int N = 8; N <= 64; N *= b){
-        RGNN.test_scalar_output(N, 10*n_samples, n_samples_eq, Kc, Kc);
+        RGNN.test_scalar_output(N, 1E6, n_samples_eq, Kc, Kc);
     }
     
     MPI_Finalize();
