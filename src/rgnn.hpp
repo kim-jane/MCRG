@@ -28,7 +28,23 @@ public:
     // random initial weights and optimizer
     void initialize();
     
+    // supervised learning temperature
+    void train_temperature(int N,
+                           int n_cycles,
+                           int n_samples,
+                           int n_samples_eq,
+                           double T,
+                           double h,
+                           double eta);
     
+    void test_temperature(int N,
+                          int n_samples,
+                          int n_samples_eq,
+                          double K0,
+                          double DeltaK);
+    
+    
+    // unsupervised learning scale invariance
     void train_scalar_output(int L,
                              int n_cycles,
                              int n_samples,
