@@ -29,10 +29,10 @@ int main(int argc, char* argv[]){
     
     // test network in range around Kc
     for(int N = 8; N <= 64; N *= b){
-        RGNN.test_temperature(N, 100*n_samples, 100*n_samples_eq, Kc, 0.4);
+        RGNN.test_temperature(N, 10*n_samples, 10*n_samples_eq, Kc, 0.4);
     }
     
-    
+    /*
     // reinitialize network
     RGNN.initialize();
 
@@ -49,9 +49,9 @@ int main(int argc, char* argv[]){
     
     // test network in range around Kc
     for(int N = 8; N <= 64; N *= b){
-        RGNN.test_scalar_output(N, 100*n_samples, 100*n_samples_eq, Kc, 0.4);
+        RGNN.test_scalar_output(N, 10*n_samples, 10*n_samples_eq, Kc, 0.4);
     }
-    
+    */
     
     MPI_Finalize();
     return 0;
