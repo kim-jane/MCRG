@@ -23,25 +23,15 @@ public:
     mat v_;
     mat W_;
     FILE* fptr_;
+    
+    double final_mse_;
 
     
     // random initial weights and optimizer
     void initialize();
     
-    // supervised learning temperature
-    void train_temperature(int N,
-                           int n_cycles,
-                           int n_samples,
-                           int n_samples_eq,
-                           double T,
-                           double h,
-                           double eta);
-    
-    void test_temperature(int N,
-                          int n_samples,
-                          int n_samples_eq,
-                          double K0,
-                          double DeltaK);
+    // set weights
+    void set_weights(const mat& W);
     
     
     // unsupervised learning scale invariance

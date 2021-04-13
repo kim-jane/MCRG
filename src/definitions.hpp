@@ -29,14 +29,14 @@ extern std::mt19937_64 rng;
 extern std::uniform_int_distribution<int> binary;
 extern std::uniform_real_distribution<double> unif;
 
-extern std::normal_distribution<double> narrow_norm;
+extern std::normal_distribution<double> norm;
 
 inline auto rand_spin(){
     return 2*binary(rng)-1;
 }
 
 inline auto rand_weight(){
-    return narrow_norm(rng);
+    return 0.3*norm(rng);
 }
 
 inline auto rand_unif(){

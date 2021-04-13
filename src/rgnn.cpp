@@ -34,201 +34,13 @@ void RenormalizationGroupNeuralNetwork::initialize(){
     v_.setZero();
 }
 
-// train so that scalar output of network predicts temperature
-void RenormalizationGroupNeuralNetwork::train_temperature(int N,
-                                                          int n_cycles,
-                                                          int n_samples,
-                                                          int n_samples_eq,
-                                                          double K,
-                                                          double h,
-                                                          double eta){
+// set weights
+void RenormalizationGroupNeuralNetwork::set_weights(const mat& W){
     
-    // open file
-    if(rank_ == 0){
-        std::string filename = "train_temp_b"+std::to_string(b_)
-                               +"_N"+std::to_string(N)
-                               +"_K"+get_rounded_str(K, 7)+".txt";
-        fptr_ = fopen(filename.c_str(), "w");
-        
-        fprintf(fptr_, "# Initial Weights: ");
-        for(int i = 0; i < b_; ++i){
-            for(int j = 0; j < b_; ++j){
-                fprintf(fptr_, "%20.10lf", W_(i,j));
-            }
-        }
-        
-        
-        fprintf(fptr_, "\n# Cycles, Avg Predicted Temp, Var Predicted Temp, MSE, || MSE Gradient ||\n");
-    
-    }
-
-    int n_samples_loc = split_samples(rank_, n_processes_, n_samples);
-    double T = -1.0/K;
-    double T_pred, T_pred_avg, T_pred_avg_loc;
-    double T2_pred_avg, T2_pred_avg_loc, T_pred_var;
-    double mse, mse_loc;
-    mat grad(b_,b_);
-    mat grad_loc(b_,b_);
-    
-    // initialize Ising model at chosen coupling
-    std::unique_ptr<IsingModel> pIsing(new IsingModel(K));
-    
-    // equilibrate lattice
-    std::shared_ptr<Lattice> pLattice(new Lattice(N));
-    pIsing->equilibrate(pLattice, n_samples_eq, false);
-    
-    // minimize
-    for(int cycles = 0; cycles <= n_cycles; ++cycles){
-        
-        T_pred_avg_loc = 0.0;
-        T2_pred_avg_loc = 0.0;
-        mse_loc = 0.0;
-        grad_loc.setZero();
-        
-        for(int samples = 0; samples < n_samples_loc; ++samples){
-            
-            // get new sample
-            pIsing->sample_new_configuration(pLattice);
-            
-            // pass sample thru RGNN
-            T_pred = scalar_output(pLattice->spins_);
-            
-            // add up values for averages
-            T_pred_avg_loc += T_pred;
-            T2_pred_avg_loc += T_pred*T_pred;
-            mse_loc += (T_pred-T)*(T_pred-T);
-            grad_loc += 2.0*(T_pred-T)*calc_gradient_scalar_output(h, pLattice->spins_);
-        }
-        
-        MPI_Allreduce(&T_pred_avg_loc, &T_pred_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(&T2_pred_avg_loc, &T2_pred_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(&mse_loc, &mse, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(grad_loc.data(), grad.data(), b_*b_, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        
-        // finalize averages
-        T_pred_avg /= n_samples;
-        T2_pred_avg /= n_samples;
-        mse /= n_samples;
-        grad /= n_samples;
-        
-        // variance
-        T_pred_var = T2_pred_avg-T_pred_avg*T_pred_avg;
-        
-        if(rank_ == 0){
-            if(cycles%10 == 0){
-                printf("%10i%15.7e%15.7e%15.7e%15.7e\n", cycles, T_pred_avg, T_pred_var, mse, grad.norm());
-            }
-            
-            fprintf(fptr_, "%10i%15.7e%15.7e%15.7e%15.7e\n", cycles, T_pred_avg, T_pred_var, mse, grad.norm());
-        }
-        
-        
-        // gradient descent
-        update_weights(eta, grad);
-    }
-    
-    if(rank_ == 0){
-        
-        fprintf(fptr_, "\n# Final Weights: ");
-        for(int i = 0; i < b_; ++i){
-            for(int j = 0; j < b_; ++j){
-                fprintf(fptr_, "%20.10lf", W_(i,j));
-            }
-        }
-        
-        fprintf(fptr_, "\n# Example Flow: ");
-        pIsing->sample_new_configuration(pLattice);
-        mat output = pLattice->spins_.cast<double>();
-        
-        while(output.rows() > 1){
-            
-            for(int i = 0; i < output.rows(); ++i){
-                for(int j = 0; j < output.cols(); ++j){
-                    fprintf(fptr_, "%20.10lf", output(i,j));
-                }
-            }
-            fprintf(fptr_, ", ");
-            apply_filter(output);
-        }
-        fprintf(fptr_, "%20.10lf", output(0,0));
-        fclose(fptr_);
-    }
+    W_ = W;
+    MPI_Bcast(W_.data(), b_*b_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 }
 
-void RenormalizationGroupNeuralNetwork::test_temperature(int N,
-                                                         int n_samples,
-                                                         int n_samples_eq,
-                                                         double K0,
-                                                         double DeltaK){
-    // open file
-    if(rank_ == 0){
-        std::string filename = "test_temp_b"+std::to_string(b_)
-                               +"_N"+std::to_string(N)
-                               +"_K"+get_rounded_str(K0, 7)+".txt";
-        fptr_ = fopen(filename.c_str(), "w");
-        
-        fprintf(fptr_, "# Coupling K, Temperature T, Avg Predicted Temp, Var Predicted Temp, MSE\n");
-    }
-
-    int n_samples_loc = split_samples(rank_, n_processes_, n_samples);
-    double T_pred, T_pred_avg, T_pred_avg_loc;
-    double T2_pred_avg, T2_pred_avg_loc, T_pred_var;
-    double mse, mse_loc;
-    double dK = DeltaK/50;
-
-    // test in DeltaK range around K0
-    for(double K = K0-DeltaK; K <= K0+DeltaK; K += dK){
-    
-        
-        double T = -1.0/K;
-        
-        // initialize Ising model at chosen coupling
-        std::unique_ptr<IsingModel> pIsing(new IsingModel(K));
-        
-        // equilibrate lattice
-        std::shared_ptr<Lattice> pLattice(new Lattice(N));
-        pIsing->equilibrate(pLattice, n_samples_eq, false);
-        
-        // get prediction
-        T_pred_avg_loc = 0.0;
-        T2_pred_avg_loc = 0.0;
-        mse_loc = 0.0;
-        
-        for(int samples = 0; samples < n_samples_loc; ++samples){
-            
-            // get new sample
-            pIsing->sample_new_configuration(pLattice);
-            
-            // pass sample thru RGNN
-            T_pred = scalar_output(pLattice->spins_);
-            
-            // add up values for averages
-            T_pred_avg_loc += T_pred;
-            T2_pred_avg_loc += T_pred*T_pred;
-            mse_loc += (T_pred-T)*(T_pred-T);
-        }
-        
-        MPI_Allreduce(&T_pred_avg_loc, &T_pred_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(&T2_pred_avg_loc, &T2_pred_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(&mse_loc, &mse, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        
-        // finalize averages
-        T_pred_avg /= n_samples;
-        T2_pred_avg /= n_samples;
-        mse /= n_samples;
-        
-        // variance
-        T_pred_var = T2_pred_avg-T_pred_avg*T_pred_avg;
-        
-        if(rank_ == 0){
-            printf("%15.7e%15.7e%15.7e%15.7e%15.7e\n", K, T, T_pred_avg, T_pred_var, mse);
-            fprintf(fptr_, "%15.7e%15.7e%15.7e%15.7e%15.7e\n", K, T, T_pred_avg, T_pred_var, mse);
-            fflush(fptr_);
-        }
-    }
-    
-    if(rank_ == 0) fclose(fptr_);
-}
 
 // train so that scalar output of network is scale invariant
 void RenormalizationGroupNeuralNetwork::train_scalar_output(int L,
@@ -335,7 +147,7 @@ void RenormalizationGroupNeuralNetwork::train_scalar_output(int L,
         
         
         if(rank_ == 0){
-            if(cycles%10 == 0){
+            if(cycles%100 == 0){
                 printf("%10i%15.7e%15.7e%15.7e%15.7e\n", cycles, uL_avg, uS_avg, mse, grad.norm());
             }
             
@@ -348,6 +160,8 @@ void RenormalizationGroupNeuralNetwork::train_scalar_output(int L,
     }
     
     if(rank_ == 0){
+        
+        final_mse_ = mse;
         
         fprintf(fptr_, "\n# Final Weights: ");
         for(int i = 0; i < b_; ++i){
