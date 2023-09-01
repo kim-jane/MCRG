@@ -5,8 +5,8 @@ int main(int argc, char* argv[]){
     MPI_Init(NULL, NULL);
     
     int b = 2;
-    int n_cycles = 1E3;
-    int n_samples = 1E6;
+    int n_cycles = 1E4;
+    int n_samples = 1E4;
     int n_samples_eq = 1E3;
     //double K0 = -0.3;
     double Tc = 2/log(1+sqrt(2));
@@ -28,7 +28,7 @@ int main(int argc, char* argv[]){
         
         RenormalizationGroupNeuralNetwork RGNN(b);
         RGNN.set_weights(W0);
-        RGNN.train_scalar_output(N, n_cycles, n_samples, n_samples_eq, Kc, h, eta);
+        RGNN.train_scalar_output(N, n_cycles, n_samples, n_samples_eq, K, h, eta);
         
         printf("%e %e\n", T, RGNN.final_mse_);
     }
